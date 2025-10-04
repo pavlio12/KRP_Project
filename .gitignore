@@ -1,0 +1,26 @@
+# Build artifacts
+/Debug/
+/Release/
+/build/
+/*.elf
+/*.bin
+/*.hex
+/*.map
+
+# CubeIDE auto-generated settings
+/.settings/
+/.project
+/.cproject
+/.mxproject
+/.mxlaunch
+
+# VSCode settings
+.vscode/
+
+# backups
+/*.zip
+
+# OS junk
+.DS_Store
+Thumbs.db
+
