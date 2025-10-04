@@ -1,10 +1,19 @@
-14:45:01 **** Incremental Build of configuration Debug for project STM32H747I-DISCO_CM4 ****
+17:42:29 **** Incremental Build of configuration Debug for project STM32H747I-DISCO_CM4 ****
 make all 
+arm-none-eabi-g++ -o "STM32H747I-DISCO_CM4.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\oopav\KRP\KRP_HMI_02\STM32CubeIDE\CM4\STM32H747XIHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32H747I-DISCO_CM4.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: STM32H747I-DISCO_CM4.elf
+ 
 arm-none-eabi-size  STM32H747I-DISCO_CM4.elf 
    text	   data	    bss	    dec	    hex	filename
    3252	     16	   8224	  11492	   2ce4	STM32H747I-DISCO_CM4.elf
 Finished building: default.size.stdout
  
+arm-none-eabi-objdump -h -S STM32H747I-DISCO_CM4.elf  > "STM32H747I-DISCO_CM4.list"
+Finished building: STM32H747I-DISCO_CM4.list
+ 
+arm-none-eabi-objcopy  -O ihex STM32H747I-DISCO_CM4.elf  "STM32H747I-DISCO_CM4.hex"
+Finished building: STM32H747I-DISCO_CM4.hex
+ 
 
-14:45:01 Build Finished. 0 errors, 0 warnings. (took 199ms)
+17:42:30 Build Finished. 0 errors, 0 warnings. (took 880ms)
 
