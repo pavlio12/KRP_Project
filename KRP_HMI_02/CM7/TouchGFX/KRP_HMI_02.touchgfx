@@ -3,8 +3,157 @@
     "Screens": [
       {
         "Name": "Screen1",
-        "Components": [],
-        "Interactions": []
+        "Components": [
+          {
+            "Type": "TextureMapper",
+            "Name": "textureMapper1",
+            "Width": 800,
+            "Height": 480,
+            "RenderingAlgorithm": "Nearest-neighbor",
+            "FileNameImage": "__generated\\alternate_theme_images_backgrounds_1024x600_shattered_rain_dark.png",
+            "LockBitmapToCenter": true,
+            "XBitmapPosition": -112.0,
+            "YBitmapPosition": -60.0,
+            "Scale": 1.0,
+            "LockOrigoToCenter": true,
+            "XOrigo": 400.0,
+            "YOrigo": 240.0,
+            "ZOrigo": 1000.0,
+            "CameraDistance": 1000.0
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 245,
+            "Y": 26,
+            "Width": 311,
+            "Height": 41,
+            "TextId": "__SingleUse_PUH7",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "buttonWithIcon1",
+            "X": 724,
+            "Y": 16,
+            "Width": 60,
+            "Height": 60,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_active.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_action_settings_50_50_E8F6FB.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_action_settings_50_50_B4D3DE.svg.png",
+            "IconX": 6,
+            "IconY": 6,
+            "IconHeight": 50,
+            "IconWidth": 50
+          },
+          {
+            "Type": "TextArea",
+            "Name": "debugTextArea",
+            "X": 36,
+            "Y": 199,
+            "Width": 127,
+            "Height": 26,
+            "TextId": "__SingleUse_D08H",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "buttonWithIcon1"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionSlide",
+              "ScreenTransitionDirection": "East",
+              "ActionComponent": "Screen2"
+            }
+          }
+        ]
+      },
+      {
+        "Name": "Screen2",
+        "Components": [
+          {
+            "Type": "TextureMapper",
+            "Name": "textureMapper1",
+            "Width": 800,
+            "Height": 480,
+            "RenderingAlgorithm": "Nearest-neighbor",
+            "FileNameImage": "__generated\\alternate_theme_images_backgrounds_1024x600_shattered_rain_dark.png",
+            "LockBitmapToCenter": true,
+            "XBitmapPosition": -112.0,
+            "YBitmapPosition": -60.0,
+            "Scale": 1.0,
+            "LockOrigoToCenter": true,
+            "XOrigo": 400.0,
+            "YOrigo": 240.0,
+            "ZOrigo": 1000.0,
+            "CameraDistance": 1000.0
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 331,
+            "Y": 26,
+            "Width": 139,
+            "Height": 41,
+            "TextId": "__SingleUse_XG94",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "ButtonWithIcon",
+            "Name": "buttonWithIcon1",
+            "X": 724,
+            "Y": 16,
+            "Width": 60,
+            "Height": 60,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_active.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_disabled.png",
+            "IconPressed": "__generated\\icon_theme_images_action_home_50_50_E8F6FB.svg.png",
+            "IconReleased": "__generated\\icon_theme_images_action_home_50_50_B4D3DE.svg.png",
+            "IconX": 6,
+            "IconY": 6,
+            "IconHeight": 50,
+            "IconWidth": 50
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "buttonWithIcon1"
+            },
+            "Action": {
+              "Type": "ActionGotoScreen",
+              "ScreenTransitionType": "ScreenTransitionSlide",
+              "ScreenTransitionDirection": "West",
+              "ActionComponent": "Screen1"
+            }
+          }
+        ]
       }
     ],
     "CustomContainerDefinitions": [],
