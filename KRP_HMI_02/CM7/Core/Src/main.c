@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+// #include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -100,6 +100,7 @@ extern void videoTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
 void LED_Task(void *argument);
+void USB_Task(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -188,11 +189,7 @@ Error_Handler();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-    /* Set default output values */
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET);
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -223,6 +220,7 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  // LEDs
   osThreadId_t ledTaskHandle;
   const osThreadAttr_t ledTask_attributes = {
     .name = "ledTask",
@@ -230,6 +228,16 @@ Error_Handler();
     .stack_size = 128 * 4
   };
   ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
+
+  // USB
+  osThreadId_t usbTaskHandle;
+  const osThreadAttr_t usbTask_attributes = {
+    .name = "usbTask",
+    .priority = osPriorityNormal,
+    .stack_size = 256 * 4
+  };
+  usbTaskHandle = osThreadNew(USB_Task, NULL, &usbTask_attributes);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -810,6 +818,18 @@ static void MX_GPIO_Init(void)
 		}
 	}
 
+	void USB_Task(void *argument)
+	{
+	  /* MX_USB_DEVICE_Init() in main() before osKernelStart() */
+	  for (;;)
+	  {
+	    const char msg[] = "H747 CDC alive\r\n";
+
+			(void)CDC_Transmit_HS((uint8_t*)msg, sizeof(msg)-1);
+
+	    osDelay(1000);
+	  }
+	}
 
 /* USER CODE END 4 */
 
