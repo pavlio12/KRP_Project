@@ -1,0 +1,5 @@
+[CortexM7:Groups]
+Doc=../README.md;
+
+[CortexM4:Groups]
+Doc=../README.md;

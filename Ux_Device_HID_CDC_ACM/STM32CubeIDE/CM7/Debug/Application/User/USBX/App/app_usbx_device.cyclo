@@ -1,0 +1,5 @@
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/app_usbx_device.c:76:6:MX_USBX_Device_Init	15
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/app_usbx_device.c:281:13:app_ux_device_thread_entry	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/app_usbx_device.c:299:6:USBX_APP_Device_Init	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/app_usbx_device.c:340:6:USBX_APP_UART_Init	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/app_usbx_device.c:357:6:HAL_GPIO_EXTI_Callback	2

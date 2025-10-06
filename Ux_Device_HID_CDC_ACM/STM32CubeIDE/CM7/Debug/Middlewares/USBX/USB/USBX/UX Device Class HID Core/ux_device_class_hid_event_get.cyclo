@@ -1,0 +1,4 @@
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/Middlewares/ST/usbx/common/usbx_device_classes/src/ux_device_class_hid_event_get.c:71:7:_ux_device_class_hid_event_check	3
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/Middlewares/ST/usbx/common/usbx_device_classes/src/ux_device_class_hid_event_get.c:131:7:_ux_device_class_hid_event_free	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/Middlewares/ST/usbx/common/usbx_device_classes/src/ux_device_class_hid_event_get.c:188:7:_ux_device_class_hid_event_get	3
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/Middlewares/ST/usbx/common/usbx_device_classes/src/ux_device_class_hid_event_get.c:261:7:_uxe_device_class_hid_event_get	3

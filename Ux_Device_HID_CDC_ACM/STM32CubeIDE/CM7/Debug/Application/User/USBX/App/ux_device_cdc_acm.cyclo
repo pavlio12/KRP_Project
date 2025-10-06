@@ -1,0 +1,9 @@
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:117:6:USBD_CDC_ACM_Activate	5
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:186:6:USBD_CDC_ACM_Deactivate	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:208:6:USBD_CDC_ACM_ParameterChange	6
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:280:6:usbx_cdc_acm_read_thread_entry	6
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:340:6:usbx_cdc_acm_write_thread_entry	6
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:402:6:HAL_UART_TxCpltCallback	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:416:6:HAL_UART_RxCpltCallback	4
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:448:6:HAL_UART_ErrorCallback	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_cdc_acm.c:460:13:USBD_CDC_VCP_Config	12

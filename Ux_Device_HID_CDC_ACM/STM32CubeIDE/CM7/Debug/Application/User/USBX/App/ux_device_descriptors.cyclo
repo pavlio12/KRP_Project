@@ -1,0 +1,17 @@
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:210:10:USBD_Get_Device_Framework_Speed	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:249:10:USBD_Get_String_Framework	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:300:10:USBD_Get_Language_Id_Framework	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:321:10:USBD_Get_Interface_Number	4
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:353:10:USBD_Get_Configuration_Number	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:375:10:USBD_HID_ReportDesc	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:406:10:USBD_HID_ReportDesc_length	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:440:13:USBD_Desc_GetString	3
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:468:16:USBD_Desc_GetLen	2
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:491:17:USBD_Device_Framework_Builder	8
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:592:10:USBD_FrameWork_AddClass	6
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:639:10:USBD_FrameWork_AddToConfDesc	7
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:778:16:USBD_FrameWork_FindFreeIFNbr	3
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:804:14:USBD_FrameWork_AddConfDesc	1
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:829:14:USBD_FrameWork_AssignEp	3
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:858:14:USBD_FrameWork_HID_Desc	5
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_descriptors.c:930:13:USBD_FrameWork_CDCDesc	4

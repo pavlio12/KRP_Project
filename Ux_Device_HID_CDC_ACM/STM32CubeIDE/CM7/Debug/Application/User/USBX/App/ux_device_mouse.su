@@ -1,0 +1,6 @@
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:70:6:USBD_HID_Mouse_Activate	16	static
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:88:6:USBD_HID_Mouse_Deactivate	16	static
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:109:6:USBD_HID_Mouse_SetReport	24	static
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:130:6:USBD_HID_Mouse_GetReport	24	static
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:150:6:usbx_hid_thread_entry	64	static
+C:/Users/oopav/KRP/Ux_Device_HID_CDC_ACM/CM7/USBX/App/ux_device_mouse.c:196:13:GetPointerData	16	static
