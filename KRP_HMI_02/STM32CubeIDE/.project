@@ -115,61 +115,6 @@
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c</locationURI>
 		</link>
-		<link>
-			<name>Drivers/BSP/Components/ft6x06.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/ft6x06/ft6x06.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/Components/ft6x06_reg.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/ft6x06/ft6x06_reg.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/Components/is42s32800j.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/is42s32800j/is42s32800j.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/Components/mt25tl01g.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/mt25tl01g/mt25tl01g.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/Components/otm8009a.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/otm8009a/otm8009a.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/Components/otm8009a_reg.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/Components/otm8009a/otm8009a_reg.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/STM32H747I_DISCOVERY/stm32h747i_discovery_bus.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32H747I-Discovery/stm32h747i_discovery_bus.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/STM32H747I_DISCOVERY/stm32h747i_discovery_qspi.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32H747I-Discovery/stm32h747i_discovery_qspi.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/STM32H747I_DISCOVERY/stm32h747i_discovery_sdram.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32H747I-Discovery/stm32h747i_discovery_sdram.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/BSP/STM32H747I_DISCOVERY/stm32h747i_discovery_ts.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Drivers/BSP/STM32H747I-Discovery/stm32h747i_discovery_ts.c</locationURI>
-		</link>
-		<link>
-			<name>Application/User/CM7/TouchGFX/target/STM32H7Instrumentation.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/CM7/TouchGFX/target/STM32H7Instrumentation.cpp</locationURI>
-		</link>
 	</linkedResources>
 	<filteredResources>
 		<filter>

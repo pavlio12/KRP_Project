@@ -1,0 +1,10 @@
+21:02:31 **** Incremental Build of configuration Debug for project Ux_Device_HID_CDC_ACM_CM7 ****
+make -j8 all 
+arm-none-eabi-size  Ux_Device_HID_CDC_ACM_CM7.elf 
+   text	   data	    bss	    dec	    hex	filename
+ 101532	    312	  29868	 131712	  20280	Ux_Device_HID_CDC_ACM_CM7.elf
+Finished building: default.size.stdout
+ 
+
+21:02:33 Build Finished. 0 errors, 0 warnings. (took 1s.615ms)
+
