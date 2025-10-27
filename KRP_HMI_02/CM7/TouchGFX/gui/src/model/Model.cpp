@@ -1,6 +1,10 @@
 #include <gui/model/Model.hpp>
 #include <gui/model/ModelListener.hpp>
 
+#include "main.h"
+#include "string.h"
+
+
 Model::Model() : modelListener(0)
 {
 
@@ -8,5 +12,13 @@ Model::Model() : modelListener(0)
 
 void Model::tick()
 {
-
+	// Works:
+	// modelListener->setSystemMessage("Model tick message");
 }
+
+void Model::setSystemMessage(const char* msg) {
+	if (modelListener) {
+		modelListener->setSystemMessage(msg); // - Broken code line!
+	}
+}
+

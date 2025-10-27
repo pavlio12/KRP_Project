@@ -1,0 +1,10 @@
+17:45:58 **** Incremental Build of configuration Debug for project PSR_Ex ****
+make -j8 all 
+arm-none-eabi-size  PSR_Ex.elf 
+   text	   data	    bss	    dec	    hex	filename
+  38776	    140	  73516	 112432	  1b730	PSR_Ex.elf
+Finished building: default.size.stdout
+ 
+
+17:45:59 Build Finished. 0 errors, 0 warnings. (took 759ms)
+

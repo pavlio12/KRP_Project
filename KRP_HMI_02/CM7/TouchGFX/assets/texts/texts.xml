@@ -6,8 +6,17 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
-      <Text Id="__SingleUse_D08H" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">Debug Text</Translation>
+      <Text Id="T_SYS_MSG_WILD" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">Text...</Translation>
+      </Text>
+      <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
+        <Translation Language="GB">Build 13.10.25</Translation>
+      </Text>
+      <Text Id="T_SYS_MSG" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_2OG2" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">System Messages</Translation>
       </Text>
       <Text Id="__SingleUse_PUH7" Alignment="Center" TypographyId="Large">
         <Translation Language="GB">KRP - USB Project</Translation>
@@ -18,8 +27,8 @@
     </TextGroup>
   </Texts>
   <Typographies>
-    <Typography Id="Default" Font="verdana.ttf" Size="22" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
-    <Typography Id="Large" Font="verdana.ttf" Size="34" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
-    <Typography Id="Small" Font="verdana.ttf" Size="14" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
+    <Typography Id="Default" Font="verdana.ttf" Size="22" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacterRanges="a-z,A-Z,0-9" />
+    <Typography Id="Large" Font="verdana.ttf" Size="34" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacterRanges="a-z,A-Z,0-9" />
+    <Typography Id="Small" Font="verdana.ttf" Size="14" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacterRanges="a-z,A-Z,0-9" />
   </Typographies>
 </TextDatabase>

@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-// #include "usbd_cdc_if.h"
+#include "hmiBridge.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -189,7 +190,7 @@ Error_Handler();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-
+  MX_USB_DEVICE_Init();     // Init USB device stack
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -807,14 +808,16 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 	void LED_Task(void *argument) {
 		for(;;) {
-			HAL_GPIO_TogglePin(GPIOI, LED1_Pin);
+			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin); // Green
+			osDelay(500);
+			/*
+			HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin); // Yellow
 			osDelay(250);
-			HAL_GPIO_TogglePin(GPIOI, LED2_Pin);
+			HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin); // Red
 			osDelay(250);
-			HAL_GPIO_TogglePin(GPIOI, LED3_Pin);
+			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
 			osDelay(250);
-			HAL_GPIO_TogglePin(GPIOI, LED4_Pin);
-			osDelay(250);
+			*/
 		}
 	}
 
@@ -823,11 +826,22 @@ static void MX_GPIO_Init(void)
 	  /* MX_USB_DEVICE_Init() in main() before osKernelStart() */
 	  for (;;)
 	  {
-	    const char msg[] = "H747 CDC alive\r\n";
+	  	// if (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED) {
+			uint8_t buffer[] = "STM CDC alive\r\n";
+			uint8_t buffLen = sizeof(buffer);
 
-			(void)CDC_Transmit_HS((uint8_t*)msg, sizeof(msg)-1);
+			if (CDC_Transmit_HS(buffer, buffLen) != USBD_OK) {
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+				osDelay(100);
+				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+				// HMI_SetSystemMessage("USB not initialized");
+			}
+			else {
+				// HMI_SetSystemMessage("USB initialized");
+				//HMI_SetSystemMessage("USB enumerated");
+			}
 
-	    osDelay(1000);
+			osDelay(1000);
 	  }
 	}
 

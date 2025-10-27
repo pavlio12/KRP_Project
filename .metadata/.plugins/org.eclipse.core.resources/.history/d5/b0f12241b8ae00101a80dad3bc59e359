@@ -1,0 +1,47 @@
+/*
+ * encoder_driver.c
+ *
+ *  Created on: Oct 19, 2025
+ *      Author: Ondrej Teren
+ */
+
+#include "encoder_driver.h"
+
+UINT encoder_driver_initialize()
+{
+	// TODO: Place your code here.
+	// Make necessary ThreadX component creation (mutexes, semaphores, event flags).
+	// You can create even a thread if it is necessary.
+
+	UINT ret;
+
+	return ret;
+}
+
+UINT encoder_driver_input(uint32_t *position)
+{
+	// TODO: Place your code here.
+	// Provide the value corresponding to the shaft rotary position. Store the value to the *position pointer.
+	// Do not forget to protect the shared memory with appropriate lock mechanism.
+
+	// To access the encoder value read the register TIM1->CNT, e.g.:
+	// *position = TIM1->CNT;
+
+	UINT ret;
+
+	return ret;
+}
+
+UINT encoder_driver_output(uint32_t position)
+{
+	// TODO: Place your code here.
+	// Preset the encoder position to the desired value.
+	// Do not forget to protect the shared memory with appropriate lock mechanism.
+
+	// To write the desired position write to the TIM1-CNT register, e.g.:
+	// TIM1->CNT = position;
+
+	UINT ret;
+
+	return ret;
+}

@@ -25,6 +25,8 @@ public:
      */
     virtual void deactivate();
 
+    void setSystemMessage(const char* msg);
+
     virtual ~Screen2Presenter() {}
 
 private:

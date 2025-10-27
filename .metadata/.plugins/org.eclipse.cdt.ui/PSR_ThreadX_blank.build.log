@@ -1,0 +1,17 @@
+18:56:02 **** Incremental Build of configuration Debug for project PSR_ThreadX_blank ****
+make -j8 all 
+arm-none-eabi-gcc "../NetXDuo/App/app_netxduo.c" -mcpu=cortex-m7 -std=gnu11 -g3 -DDEBUG -DUSE_PWR_LDO_SUPPLY -DUSE_NUCLEO_64 -DUSE_HAL_DRIVER -DSTM32H753xx -DTX_INCLUDE_USER_DEFINE_FILE -DNX_INCLUDE_USER_DEFINE_FILE -c -I../Core/Inc -I../Drivers/STM32H7xx_HAL_Driver/Inc -I../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -I../Drivers/BSP/STM32H7xx_Nucleo -I../Drivers/CMSIS/Device/ST/STM32H7xx/Include -I../Drivers/CMSIS/Include -I../AZURE_RTOS/App -I../Middlewares/ST/threadx/common/inc/ -I../Middlewares/ST/threadx/ports/cortex_m7/gnu/inc/ -I../NetXDuo/App -I../NetXDuo/Target -I../Drivers/BSP/Components/lan8742/ -I../Middlewares/ST/netxduo/common/drivers/ethernet/ -I../Middlewares/ST/netxduo/common/inc/ -I../Middlewares/ST/netxduo/ports/cortex_m7/gnu/inc/ -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"NetXDuo/App/app_netxduo.d" -MT"NetXDuo/App/app_netxduo.o" --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -o "NetXDuo/App/app_netxduo.o"
+arm-none-eabi-gcc -o "PSR_ThreadX_blank.elf" @"objects.list"   -mcpu=cortex-m7 -T"C:\Users\oopav\PSR\Cvika\PSR_Ex\STM32H753ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PSR_ThreadX_blank.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: PSR_ThreadX_blank.elf
+ 
+arm-none-eabi-size  PSR_ThreadX_blank.elf 
+arm-none-eabi-objdump -h -S PSR_ThreadX_blank.elf  > "PSR_ThreadX_blank.list"
+   text	   data	    bss	    dec	    hex	filename
+  96700	    240	 317200	 414140	  651bc	PSR_ThreadX_blank.elf
+Finished building: default.size.stdout
+ 
+Finished building: PSR_ThreadX_blank.list
+ 
+
+18:56:07 Build Finished. 0 errors, 0 warnings. (took 4s.596ms)
+

@@ -16,3 +16,7 @@ void Screen2Presenter::deactivate()
 {
 
 }
+
+void Screen2Presenter::setSystemMessage(const char* msg) {
+	view.setSystemMessage(msg);
+}

@@ -11,7 +11,13 @@ public:
     virtual ~Screen2View() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+
+    virtual void setSystemMessage(const char* msg);           // public setter
+		static const uint16_t SYS_MSG_BUFFER_SIZE = 256;  // adjust!
+
+
 protected:
+    Unicode::UnicodeChar sysMsgBuffer[SYS_MSG_BUFFER_SIZE];  // actual buffer
 };
 
 #endif // SCREEN2VIEW_HPP

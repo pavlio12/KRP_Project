@@ -14,6 +14,8 @@ public:
     {
         model = m;
     }
+
+    virtual void setSystemMessage(const char* /*msg*/) {}
 protected:
     Model* model;
 };

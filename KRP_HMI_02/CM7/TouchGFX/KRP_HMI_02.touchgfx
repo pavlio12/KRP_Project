@@ -45,29 +45,13 @@
             "Width": 60,
             "Height": 60,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_active.png",
-            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_fill_pressed.png",
             "IconPressed": "__generated\\icon_theme_images_action_settings_50_50_E8F6FB.svg.png",
             "IconReleased": "__generated\\icon_theme_images_action_settings_50_50_B4D3DE.svg.png",
             "IconX": 6,
             "IconY": 6,
             "IconHeight": 50,
             "IconWidth": 50
-          },
-          {
-            "Type": "TextArea",
-            "Name": "debugTextArea",
-            "X": 36,
-            "Y": 199,
-            "Width": 127,
-            "Height": 26,
-            "TextId": "__SingleUse_D08H",
-            "TextRotation": "0",
-            "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
-            },
-            "AutoSize": true
           }
         ],
         "Interactions": [
@@ -107,8 +91,27 @@
             "CameraDistance": 1000.0
           },
           {
+            "Type": "BoxWithBorder",
+            "Name": "boxWithBorder1",
+            "X": 35,
+            "Y": 131,
+            "Width": 273,
+            "Height": 324,
+            "Color": {
+              "Red": 39,
+              "Green": 62,
+              "Blue": 78
+            },
+            "BorderColor": {
+              "Red": 72,
+              "Green": 99,
+              "Blue": 115
+            },
+            "BorderSize": 3
+          },
+          {
             "Type": "TextArea",
-            "Name": "textArea1",
+            "Name": "textTitle1",
             "X": 331,
             "Y": 26,
             "Width": 139,
@@ -123,6 +126,60 @@
             "AutoSize": true
           },
           {
+            "Type": "TextArea",
+            "Name": "textTitle1_1",
+            "X": 679,
+            "Y": 448,
+            "Width": 105,
+            "Height": 17,
+            "TextId": "__SingleUse_SR56",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 73,
+              "Green": 99,
+              "Blue": 116
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textLabel1",
+            "X": 44,
+            "Y": 143,
+            "Width": 195,
+            "Height": 26,
+            "TextId": "__SingleUse_2OG2",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 121,
+              "Green": 153,
+              "Blue": 173
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textSysMessages",
+            "X": 44,
+            "Y": 181,
+            "Width": 71,
+            "Height": 26,
+            "TextId": "T_SYS_MSG",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 121,
+              "Green": 153,
+              "Blue": 173
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "T_SYS_MSG_WILD",
+              "UseBuffer": true,
+              "BufferSize": 256
+            },
+            "WideTextAction": 1
+          },
+          {
             "Type": "ButtonWithIcon",
             "Name": "buttonWithIcon1",
             "X": 724,
@@ -130,13 +187,23 @@
             "Width": 60,
             "Height": 60,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_active.png",
-            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_outline_disabled.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_icon_rounded_tiny_fill_pressed.png",
             "IconPressed": "__generated\\icon_theme_images_action_home_50_50_E8F6FB.svg.png",
             "IconReleased": "__generated\\icon_theme_images_action_home_50_50_B4D3DE.svg.png",
             "IconX": 6,
             "IconY": 6,
             "IconHeight": 50,
             "IconWidth": 50
+          },
+          {
+            "Type": "Button",
+            "Name": "buttonSysMsg",
+            "X": 255,
+            "Y": 404,
+            "Width": 36,
+            "Height": 36,
+            "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_round_micro_outline_action.png",
+            "Released": "__generated\\alternate_theme_images_widgets_button_icon_round_micro_outline_disabled.png"
           }
         ],
         "Interactions": [
@@ -152,6 +219,17 @@
               "ScreenTransitionDirection": "West",
               "ActionComponent": "Screen1"
             }
+          },
+          {
+            "InteractionName": "Interaction2",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "buttonSysMsg"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "setSystemMessage"
+            }
           }
         ]
       }
@@ -163,7 +241,7 @@
       "Height": 480
     },
     "SelectedColorDepth": 24,
-    "StartupScreenName": "Screen1",
+    "StartupScreenName": "Screen2",
     "SelectedStartupLanguage": "GB",
     "TouchGfxPath": "../Middlewares/ST/touchgfx",
     "UIPath": ".",

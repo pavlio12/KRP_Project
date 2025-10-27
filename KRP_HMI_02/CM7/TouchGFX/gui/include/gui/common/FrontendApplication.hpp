@@ -18,6 +18,9 @@ public:
         model.tick();
         FrontendApplicationBase::handleTickEvent();
     }
+
+    Model& getModel() { return model; }   // 'model' is inherited from the base
+
 private:
 };
 

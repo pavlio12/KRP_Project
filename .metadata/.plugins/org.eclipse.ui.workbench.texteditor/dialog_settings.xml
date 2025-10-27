@@ -3,6 +3,10 @@
 	<item key="hasShownOverlayPopupBefore" value="true"/>
 	<item key="replaceBarOpen" value="false"/>
 	<list key="searchhistory">
+		<item value="wildCa"/>
+		<item value="led_mutex"/>
+		<item value="SW1_Pin"/>
+		<item value="MX_USB_DE"/>
 		<item value="led_thread_stack"/>
 		<item value="led"/>
 	</list>

@@ -1,0 +1,36 @@
+#include <gui/screen2_screen/Screen2View.hpp>
+// My includes
+#include <touchgfx/Unicode.hpp>
+
+
+Screen2View::Screen2View()
+{
+
+}
+
+void Screen2View::setupScreen()
+{
+    Screen2ViewBase::setupScreen();
+}
+
+void Screen2View::tearDownScreen()
+{
+    Screen2ViewBase::tearDownScreen();
+}
+
+void Screen2View::setSystemMessage(const char* msg)
+{
+    // Convert normal C-string (UTF-8/ASCII) to TouchGFX Unicode
+		Unicode::snprintf(sysMsgBuffer, SYS_MSG_BUFFER_SIZE, "%s", msg);
+		/*
+    Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg),
+                      sysMsgBuffer,
+                      SYS_MSG_BUFFER_SIZE);
+
+    // Bind this buffer to the TextArea with wildcard
+    textSysMessages.setWildcard(sysMsgBuffer);
+    */
+
+    // Redraw widget
+    textSysMessages.invalidate();
+}

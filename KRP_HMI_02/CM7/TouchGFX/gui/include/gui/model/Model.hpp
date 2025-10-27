@@ -14,6 +14,9 @@ public:
     }
 
     void tick();
+
+    void setSystemMessage(const char* msg);
+
 protected:
     ModelListener* modelListener;
 };

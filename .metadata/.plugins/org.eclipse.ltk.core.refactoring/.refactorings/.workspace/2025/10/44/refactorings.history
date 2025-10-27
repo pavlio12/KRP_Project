@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;PSR_ThreadX_blank&apos;" deleteContents="false" description="Delete resource &apos;PSR_ThreadX_blank&apos;" element1="/PSR_ThreadX_blank" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1761569908486"/>
+</session>
