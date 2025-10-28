@@ -15,10 +15,14 @@ public:
 
     void tick();
 
-    void setSystemMessage(const char* msg);
+    void addSystemMessage(const char* msg);
+
 
 protected:
     ModelListener* modelListener;
+
+    bool hasNewMessage = false;
+		char pendingMessage[64];
 };
 
 #endif // MODEL_HPP

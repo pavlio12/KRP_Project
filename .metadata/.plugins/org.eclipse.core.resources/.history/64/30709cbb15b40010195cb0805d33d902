@@ -1,0 +1,30 @@
+#include <gui/screen2_screen/Screen2View.hpp>
+#include <gui/screen2_screen/Screen2Presenter.hpp>
+
+Screen2Presenter::Screen2Presenter(Screen2View& v)
+    : view(v)
+{
+
+}
+
+void Screen2Presenter::activate()
+{
+
+}
+
+void Screen2Presenter::deactivate()
+{
+
+}
+
+void Screen2Presenter::setSystemMessage(const char* msg) {
+	view.setSystemMessage(msg);
+}
+
+void Screen2Presenter::appendSystemMessage(const char* msg) {
+	view.appendSystemMessage(msg);
+}
+
+void Screen2Presenter::prependSystemMessage(const char* msg) {
+	view.appendSystemMessage(msg);
+}

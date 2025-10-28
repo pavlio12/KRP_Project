@@ -6,10 +6,10 @@
 #include <gui/model/Model.hpp>
 
 
-extern "C" void HMI_SetSystemMessage(const char* msg)
+extern "C" void HMI_addSystemMessage(const char* msg)
 {
     auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
     if (app) {
-        app->getModel().setSystemMessage(msg);
+        app->getModel().addSystemMessage(msg);
     }
 }

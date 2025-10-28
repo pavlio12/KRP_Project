@@ -16,6 +16,11 @@ public:
     }
 
     virtual void setSystemMessage(const char* /*msg*/) {}
+
+    virtual void appendSystemMessage(const char* /*msg*/) {}
+
+    virtual void prependSystemMessage(const char* /*msg*/) {}
+
 protected:
     Model* model;
 };

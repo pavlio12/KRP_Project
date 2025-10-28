@@ -27,6 +27,10 @@ public:
 
     void setSystemMessage(const char* msg);
 
+    void appendSystemMessage(const char* msg);
+
+    void prependSystemMessage(const char* msg);
+
     virtual ~Screen2Presenter() {}
 
 private:

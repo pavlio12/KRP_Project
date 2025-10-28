@@ -823,6 +823,8 @@ static void MX_GPIO_Init(void)
 
 	void USB_Task(void *argument)
 	{
+		static uint32_t ModelCounter = 0;
+
 	  /* MX_USB_DEVICE_Init() in main() before osKernelStart() */
 	  for (;;)
 	  {
@@ -834,11 +836,11 @@ static void MX_GPIO_Init(void)
 				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 				osDelay(100);
 				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-				// HMI_SetSystemMessage("USB not initialized");
+				HMI_addSystemMessage("USB not initialized");
 			}
 			else {
-				// HMI_SetSystemMessage("USB initialized");
-				//HMI_SetSystemMessage("USB enumerated");
+				HMI_addSystemMessage("USB initialized");
+				//HMI_addSystemMessage("USB enumerated");
 			}
 
 			osDelay(1000);

@@ -10,7 +10,7 @@
         <Translation Language="GB">Text...</Translation>
       </Text>
       <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
-        <Translation Language="GB">Build 13.10.25</Translation>
+        <Translation Language="GB">Build 28.10.25</Translation>
       </Text>
       <Text Id="T_SYS_MSG" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">&lt;value&gt;</Translation>

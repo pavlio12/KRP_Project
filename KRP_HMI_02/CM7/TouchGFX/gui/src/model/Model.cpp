@@ -3,6 +3,9 @@
 
 #include "main.h"
 #include "string.h"
+#include <stdio.h>
+
+// static uint32_t ModelCounter = 0;
 
 
 Model::Model() : modelListener(0)
@@ -12,13 +15,28 @@ Model::Model() : modelListener(0)
 
 void Model::tick()
 {
-	// Works:
-	// modelListener->setSystemMessage("Model tick message");
+    /*// Works nicely. Runs about 60Hz
+		char buffer[64];
+    snprintf(buffer, sizeof(buffer), "Model tick message %lu", ModelCounter++);
+    modelListener->setSystemMessage(buffer);
+    */
+
+		if (hasNewMessage && modelListener) {
+				modelListener->prependSystemMessage(pendingMessage); // Add to the beginning of TextArea
+				hasNewMessage = false;
+		}
 }
 
-void Model::setSystemMessage(const char* msg) {
+void Model::addSystemMessage(const char* msg)
+{
+	strncpy(pendingMessage, msg, sizeof(pendingMessage) - 1);
+	pendingMessage[sizeof(pendingMessage) - 1] = '\0';
+	hasNewMessage = true;
+
+	/*
 	if (modelListener) {
 		modelListener->setSystemMessage(msg); // - Broken code line!
 	}
+	*/
 }
 

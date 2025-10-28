@@ -3,6 +3,10 @@
 	<item key="hasShownOverlayPopupBefore" value="true"/>
 	<item key="replaceBarOpen" value="false"/>
 	<list key="searchhistory">
+		<item value="ipAddress"/>
+		<item value="NxAppPool"/>
+		<item value="outcoming_packet"/>
+		<item value="nx_app_thread_entry"/>
 		<item value="wildCa"/>
 		<item value="led_mutex"/>
 		<item value="SW1_Pin"/>

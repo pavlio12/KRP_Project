@@ -158,28 +158,6 @@
             "AutoSize": true
           },
           {
-            "Type": "TextArea",
-            "Name": "textSysMessages",
-            "X": 44,
-            "Y": 181,
-            "Width": 71,
-            "Height": 26,
-            "TextId": "T_SYS_MSG",
-            "TextRotation": "0",
-            "Color": {
-              "Red": 121,
-              "Green": 153,
-              "Blue": 173
-            },
-            "AutoSize": true,
-            "Wildcard1": {
-              "TextId": "T_SYS_MSG_WILD",
-              "UseBuffer": true,
-              "BufferSize": 256
-            },
-            "WideTextAction": 1
-          },
-          {
             "Type": "ButtonWithIcon",
             "Name": "buttonWithIcon1",
             "X": 724,
@@ -196,14 +174,44 @@
             "IconWidth": 50
           },
           {
-            "Type": "Button",
-            "Name": "buttonSysMsg",
-            "X": 255,
-            "Y": 404,
-            "Width": 36,
-            "Height": 36,
-            "Pressed": "__generated\\alternate_theme_images_widgets_button_icon_round_micro_outline_action.png",
-            "Released": "__generated\\alternate_theme_images_widgets_button_icon_round_micro_outline_disabled.png"
+            "Type": "ScrollableContainer",
+            "Name": "logScroll",
+            "X": 44,
+            "Y": 181,
+            "Width": 250,
+            "Height": 250,
+            "HorizontalScrollEnabled": true,
+            "VerticalScrollEnabled": true,
+            "ScrollbarsVisible": true,
+            "ScrollbarsVisibleOnPressed": true,
+            "ScrollbarsColor": {
+              "Red": 118,
+              "Green": 149,
+              "Blue": 168
+            },
+            "ScrollbarsAlpha": 255,
+            "Components": [
+              {
+                "Type": "TextArea",
+                "Name": "textSysMessages",
+                "Width": 71,
+                "Height": 26,
+                "TextId": "T_SYS_MSG",
+                "TextRotation": "0",
+                "Color": {
+                  "Red": 121,
+                  "Green": 153,
+                  "Blue": 173
+                },
+                "AutoSize": true,
+                "Wildcard1": {
+                  "TextId": "T_SYS_MSG_WILD",
+                  "UseBuffer": true,
+                  "BufferSize": 1024
+                },
+                "WideTextAction": 1
+              }
+            ]
           }
         ],
         "Interactions": [
@@ -218,17 +226,6 @@
               "ScreenTransitionType": "ScreenTransitionSlide",
               "ScreenTransitionDirection": "West",
               "ActionComponent": "Screen1"
-            }
-          },
-          {
-            "InteractionName": "Interaction2",
-            "Trigger": {
-              "Type": "TriggerClicked",
-              "TriggerComponent": "buttonSysMsg"
-            },
-            "Action": {
-              "Type": "ActionCustom",
-              "FunctionName": "setSystemMessage"
             }
           }
         ]
