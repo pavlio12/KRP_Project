@@ -1,10 +1,20 @@
-16:58:14 **** Incremental Build of configuration Debug for project STM32H747I-DISCO_CM7 ****
+21:01:29 **** Incremental Build of configuration Debug for project STM32H747I-DISCO_CM7 ****
 make all 
+arm-none-eabi-g++ "C:/Users/oopav/KRP/KRP_HMI_02/CM7/TouchGFX/gui/src/screen2_screen/Screen2View.cpp" -mcpu=cortex-m7 -std=gnu++14 -g3 -DDEBUG -DCORE_CM7 -DUSE_HAL_DRIVER -DUSE_BPP=24 -DSTM32H747xx -DUSE_PWR_DIRECT_SMPS_SUPPLY -c -I../../../CM7/Core/Inc -I../../../CM7/TouchGFX/App -I../../../CM7/TouchGFX/target/generated -I../../../CM7/TouchGFX/target -I../../../Drivers/BSP/Components/Common -I../../../Drivers/BSP/STM32H747I-Discovery -I../../../Drivers/STM32H7xx_HAL_Driver/Inc -I../../../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy -I../../../Middlewares/Third_Party/FreeRTOS/Source/include -I../../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 -I../../../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F -I../../../Drivers/CMSIS/Device/ST/STM32H7xx/Include -I../../../Drivers/CMSIS/Include -I../../../Drivers/BSP/Components -I../../../CM7/LIBJPEG/App -I../../../CM7/LIBJPEG/Target -I../../../Utilities/JPEG -I../../../Middlewares/Third_Party/LibJPEG/include -I../../CM7/../../CM7/Middlewares/ST/touchgfx/framework/include -I../../CM7/../../CM7/TouchGFX/generated/fonts/include -I../../CM7/../../CM7/TouchGFX/generated/gui_generated/include -I../../CM7/../../CM7/TouchGFX/generated/images/include -I../../CM7/../../CM7/TouchGFX/generated/texts/include -I../../CM7/../../CM7/TouchGFX/generated/videos/include -I../../CM7/../../CM7/TouchGFX/gui/include -I../../../CM7/USB_DEVICE/App -I../../../CM7/USB_DEVICE/Target -I../../../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../../../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -femit-class-debug-always -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Application/User/gui/Screen2View.d" -MT"Application/User/gui/Screen2View.o" --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -o "Application/User/gui/Screen2View.o"
+arm-none-eabi-g++ -o "STM32H747I-DISCO_CM7.elf" @"objects.list"  -l:libtouchgfx-float-abi-hard.a -mcpu=cortex-m7 -T"C:\Users\oopav\KRP\KRP_HMI_02\STM32CubeIDE\CM7\STM32H747XIHX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32H747I-DISCO_CM7.map" -Wl,--gc-sections -static -L../../../CM7/Middlewares/ST/touchgfx/lib/core/cortex_m7/gcc --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: STM32H747I-DISCO_CM7.elf
+ 
 arm-none-eabi-size  STM32H747I-DISCO_CM7.elf 
    text	   data	    bss	    dec	    hex	filename
-2121078	  39460	2440304	4600842	 46340a	STM32H747I-DISCO_CM7.elf
+2122450	  39460	2440312	4602222	 46396e	STM32H747I-DISCO_CM7.elf
 Finished building: default.size.stdout
  
+arm-none-eabi-objdump -h -S STM32H747I-DISCO_CM7.elf  > "STM32H747I-DISCO_CM7.list"
+Finished building: STM32H747I-DISCO_CM7.list
+ 
+arm-none-eabi-objcopy  -O ihex STM32H747I-DISCO_CM7.elf  "STM32H747I-DISCO_CM7.hex"
+Finished building: STM32H747I-DISCO_CM7.hex
+ 
 
-16:58:15 Build Finished. 0 errors, 0 warnings. (took 659ms)
+21:01:32 Build Finished. 0 errors, 0 warnings. (took 2s.423ms)
 

@@ -52,6 +52,24 @@
 #define APP_RX_DATA_SIZE  2048
 #define APP_TX_DATA_SIZE  2048
 /* USER CODE BEGIN EXPORTED_DEFINES */
+// Changed by Ondrej Pavlin
+typedef enum {
+	 USB_STATE_INIT = 0,
+	 USB_STATE_ATTACHED,
+	 USB_STATE_CONFIGURED,
+	 USB_STATE_TX,
+	 USB_STATE_RX,
+	 USB_STATE_ERROR,
+	 USB_STATE_SUSPENDED
+} USB_State_t;
+
+typedef struct {
+	 USB_State_t current;
+	 USB_State_t previous;
+	 uint32_t lastTick;
+} USB_Context_t;
+
+// extern USB_Context_t g_usb;
 
 /* USER CODE END EXPORTED_DEFINES */
 
@@ -109,6 +127,7 @@ extern USBD_CDC_ItfTypeDef USBD_Interface_fops_HS;
 uint8_t CDC_Transmit_HS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
+const char* USB_GetStateString(void);
 
 /* USER CODE END EXPORTED_FUNCTIONS */
 

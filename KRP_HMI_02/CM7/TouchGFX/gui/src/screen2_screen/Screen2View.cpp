@@ -13,7 +13,7 @@ void Screen2View::setupScreen()
     Screen2ViewBase::setupScreen();
 
     // Works
-    static const char test[] = "HELLO FROM VIEW";
+    static const char test[] = "HMI initialized";
     Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(test), sysMsgBuffer, SYS_MSG_BUFFER_SIZE);
     textSysMessages.setWildcard(sysMsgBuffer);
     textSysMessages.resizeToCurrentText();

@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "hmiBridge.h"
 #include "usbd_cdc_if.h"
+#include "usb_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,7 +102,7 @@ extern void videoTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
 void LED_Task(void *argument);
-void USB_Task(void *argument);
+// void USB_Task(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -820,12 +821,12 @@ static void MX_GPIO_Init(void)
 			*/
 		}
 	}
-
+	/*
 	void USB_Task(void *argument)
 	{
 		static uint32_t ModelCounter = 0;
 
-	  /* MX_USB_DEVICE_Init() in main() before osKernelStart() */
+	  // MX_USB_DEVICE_Init() in main() before osKernelStart()
 	  for (;;)
 	  {
 	  	// if (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED) {
@@ -846,6 +847,7 @@ static void MX_GPIO_Init(void)
 			osDelay(1000);
 	  }
 	}
+	*/
 
 /* USER CODE END 4 */
 

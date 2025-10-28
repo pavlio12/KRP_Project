@@ -22,7 +22,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+// #include "usb_task.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,6 +110,8 @@ uint8_t UserTxBufferHS[APP_TX_DATA_SIZE];
 extern USBD_HandleTypeDef hUsbDeviceHS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
+
+USB_Context_t g_usb = { USB_STATE_INIT, USB_STATE_INIT, 0 };  // current, previous, lastTick
 
 /* USER CODE END EXPORTED_VARIABLES */
 
@@ -264,6 +266,8 @@ static int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 11 */
+	// Changed by Ondrej Pavlin
+	USB_OnRx(Buf, *Len);
   USBD_CDC_SetRxBuffer(&hUsbDeviceHS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceHS);
   return (USBD_OK);
@@ -310,11 +314,28 @@ static int8_t CDC_TransmitCplt_HS(uint8_t *Buf, uint32_t *Len, uint8_t epnum)
   UNUSED(Buf);
   UNUSED(Len);
   UNUSED(epnum);
+  // Changed by Ondrej Pavlin
+  g_usb.current = USB_STATE_CONFIGURED;
   /* USER CODE END 14 */
   return result;
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
+
+const char* USB_GetStateString(void)
+{
+    switch (g_usb.current)
+    {
+        case USB_STATE_INIT:        return "INIT";
+        case USB_STATE_ATTACHED:    return "ATTACHED";
+        case USB_STATE_CONFIGURED:  return "CONFIGURED";
+        case USB_STATE_TX:          return "TRANSMITTING";
+        case USB_STATE_RX:          return "RECEIVING";
+        case USB_STATE_ERROR:       return "ERROR";
+        case USB_STATE_SUSPENDED:   return "SUSPENDED";
+        default:                    return "UNKNOWN";
+    }
+}
 
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
