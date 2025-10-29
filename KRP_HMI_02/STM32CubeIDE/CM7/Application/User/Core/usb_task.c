@@ -79,10 +79,12 @@ void USB_OnRx(uint8_t *buf, uint32_t len)
     if (strncmp((char*)buf, "RESET", 5) == 0) {
         HMI_addSystemMessage("Command: RESET");
         NVIC_SystemReset();
-    } else if (strncmp((char*)buf, "COLOR", 5) == 0) {
+    }
+    else if (strncmp((char*)buf, "COLOR", 5) == 0) {
         HMI_addSystemMessage("Command: COLOR");
         // change LED color / mode here
-    } else {
+    }
+    else {
         HMI_addSystemMessage((char*)buf);
     }
 
