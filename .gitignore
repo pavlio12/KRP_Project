@@ -8,18 +8,18 @@
 /*.map
 
 # CubeIDE auto-generated settings
-/.settings/
-/.project
-/.cproject
-/.mxproject
-/.mxlaunch
-/.metadata/
+#.settings/
+#.project
+.cproject
+.mxproject
+.mxlaunch
+.metadata/
 
 # VSCode settings
 .vscode/
 
 # backups
-/*.zip
+*.zip
 
 # OS junk
 .DS_Store
