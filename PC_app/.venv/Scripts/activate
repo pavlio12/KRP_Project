@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\__Ondra Work\__CVUT\Semestr 9\KRP\Project\PC_app\.venv"
+VIRTUAL_ENV="C:\Users\oopav\KRP\PC_app\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
