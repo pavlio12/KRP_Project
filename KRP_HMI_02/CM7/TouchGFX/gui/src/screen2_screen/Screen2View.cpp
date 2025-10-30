@@ -5,40 +5,21 @@
 
 Screen2View::Screen2View()
 {
-
 }
 
 void Screen2View::setupScreen()
 {
     Screen2ViewBase::setupScreen();
 
-    // Works
-    static const char test[] = "HMI initialized";
-    Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(test), sysMsgBuffer, SYS_MSG_BUFFER_SIZE);
-    textSysMessages.setWildcard(sysMsgBuffer);
-    textSysMessages.resizeToCurrentText();
-    textSysMessages.invalidate();
+    setSystemMessage("HMI initialized");
 
-
-
-    // Does nothing
-    /*
-    touchgfx::Unicode::strncpy(sysMsgBuffer, "string", SYS_MSG_BUFFER_SIZE);
-    textSysMessages.resizeToCurrentText();
-    textSysMessages.invalidate();
-    */
-
-    /*
-    static const char test[] = "HELLO FROM VIEW";
-    Unicode::snprintf(textSysMessagesBuffer, TEXTSYSMESSAGES_SIZE, "%s", test);
-    textSysMessages.invalidate();
-    */
 }
 
 void Screen2View::tearDownScreen()
 {
     Screen2ViewBase::tearDownScreen();
 }
+
 
 void Screen2View::setSystemMessage(const char* msg)
 {

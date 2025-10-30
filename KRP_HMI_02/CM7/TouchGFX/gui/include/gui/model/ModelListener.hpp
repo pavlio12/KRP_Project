@@ -21,6 +21,8 @@ public:
 
     virtual void prependSystemMessage(const char* /*msg*/) {}
 
+    virtual void addUsbStateGraphPoint(const uint8_t /*stateValue*/) {}
+
 protected:
     Model* model;
 };

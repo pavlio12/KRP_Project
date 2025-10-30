@@ -28,3 +28,4 @@ void Screen2Presenter::appendSystemMessage(const char* msg) {
 void Screen2Presenter::prependSystemMessage(const char* msg) {
 	view.prependSystemMessage(msg);
 }
+

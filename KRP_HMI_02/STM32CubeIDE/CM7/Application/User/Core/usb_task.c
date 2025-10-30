@@ -26,7 +26,10 @@ void USB_Task(void *argument)
     for (;;) {
         tick = osKernelGetTickCount();
 
-        display_USB_state(false);
+        if (tick % 10 == 0)
+        	display_USB_state(true);
+				else
+					display_USB_state(false);
 
         switch (g_usb.current)
         {
@@ -121,9 +124,12 @@ void display_USB_state(bool force_update) {
 	if ((g_usb.current == g_usb.previous) && !force_update) {
 		return;
 	}
-	char msg[64];
-	snprintf(msg, sizeof(msg), "USB State: %s", USB_GetStateString());
-	HMI_addSystemMessage(msg);
+	// char msg[64];
+	// snprintf(msg, sizeof(msg), "USB State: %s", USB_GetStateString());
+	// HMI_addSystemMessage(msg);
+
+	HMI_addUsbStateGraphPoint(USB_GetStateID());
+
 	// update previous
 	g_usb.previous = g_usb.current;
 }

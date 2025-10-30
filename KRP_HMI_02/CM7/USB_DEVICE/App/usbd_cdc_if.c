@@ -337,6 +337,21 @@ const char* USB_GetStateString(void)
     }
 }
 
+const uint8_t USB_GetStateID(void)
+{
+    switch (g_usb.current)
+    {
+        case USB_STATE_INIT:        return 0;
+        case USB_STATE_ATTACHED:    return 1;
+        case USB_STATE_CONFIGURED:  return 2;
+        case USB_STATE_TX:          return 3;
+        case USB_STATE_RX:          return 4;
+        case USB_STATE_ERROR:       return 5;
+        case USB_STATE_SUSPENDED:   return 6;
+        default:                    return 5; // Default Error
+    }
+}
+
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 /**

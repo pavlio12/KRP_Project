@@ -12,11 +12,15 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
 
+    // System Messages TextArea
     virtual void setSystemMessage(const char* msg);     // public setter
     virtual void appendSystemMessage(const char* msg);
     virtual void prependSystemMessage(const char *msg);
 
+
 		static const uint16_t SYS_MSG_BUFFER_SIZE = 1024;    // adjust!
+
+
 
 
 protected:

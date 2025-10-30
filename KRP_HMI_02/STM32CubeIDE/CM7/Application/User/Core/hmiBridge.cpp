@@ -13,3 +13,11 @@ extern "C" void HMI_addSystemMessage(const char* msg)
         app->getModel().addSystemMessage(msg);
     }
 }
+
+extern "C" void HMI_addUsbStateGraphPoint(uint8_t stateValue)
+{
+    auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
+    if (app) {
+        app->getModel().addUsbStateGraphPoint(stateValue);
+    }
+}

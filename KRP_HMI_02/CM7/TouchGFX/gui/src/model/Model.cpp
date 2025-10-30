@@ -25,10 +25,15 @@ void Model::tick()
 				modelListener->prependSystemMessage(pendingMessage); // Add to the beginning of TextArea
 				hasNewMessage = false;
 		}
+
+		if (hasNewUsbGraphPoint && modelListener) {
+				modelListener->addUsbStateGraphPoint(pendingUsbGraphPoint);
+				hasNewUsbGraphPoint = false;
+		}
+
 }
 
-void Model::addSystemMessage(const char* msg)
-{
+void Model::addSystemMessage(const char* msg) {
 	strncpy(pendingMessage, msg, sizeof(pendingMessage) - 1);
 	pendingMessage[sizeof(pendingMessage) - 1] = '\0';
 	hasNewMessage = true;
@@ -39,4 +44,19 @@ void Model::addSystemMessage(const char* msg)
 	}
 	*/
 }
+
+void Model::addUsbStateGraphPoint(uint8_t stateValue) {
+	pendingUsbGraphPoint = stateValue;
+	hasNewUsbGraphPoint = true;
+
+	if (usbHistoryCount < USB_GRAPH_HISTORY)
+			usbHistory[usbHistoryCount++] = stateValue;
+	else {
+			// Shift left (sliding window)
+			memmove(usbHistory, usbHistory + 1, USB_GRAPH_HISTORY - 1);
+			usbHistory[USB_GRAPH_HISTORY - 1] = stateValue;
+	}
+}
+
+
 

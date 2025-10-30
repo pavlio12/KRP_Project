@@ -6,8 +6,44 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_3NBW" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Susp</Translation>
+      </Text>
+      <Text Id="__SingleUse_EMGK" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Error</Translation>
+      </Text>
+      <Text Id="__SingleUse_55U0" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Rx</Translation>
+      </Text>
+      <Text Id="__SingleUse_I9BO" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Tx</Translation>
+      </Text>
+      <Text Id="__SingleUse_39UJ" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Config</Translation>
+      </Text>
+      <Text Id="__SingleUse_JVYP" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Attach</Translation>
+      </Text>
+      <Text Id="__SingleUse_2KOF" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">Init</Translation>
+      </Text>
+      <Text Id="__SingleUse_6QHH" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB State:</Translation>
+      </Text>
+      <Text Id="__SingleUse_VBUG" Alignment="Center" TypographyId="Large">
+        <Translation Language="GB">USB Graph</Translation>
+      </Text>
+      <Text Id="T_USB_STATE_WILD" Alignment="Left" TypographyId="Small">
+        <Translation Language="GB">Text:...</Translation>
+      </Text>
+      <Text Id="T_USB_STATE" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_S2VK" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB State:</Translation>
+      </Text>
       <Text Id="T_SYS_MSG_WILD" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">Text...</Translation>
+        <Translation Language="GB">Text:...</Translation>
       </Text>
       <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
         <Translation Language="GB">Build 28.10.25</Translation>
