@@ -5,133 +5,39 @@
  *      Author: Ondrej Pavlin
  */
 
-#include "usbd_cdc_if.h"
+
 #include "usb_task.h"
+#include "usb_fsm.h"
+#include "usbd_cdc_if.h"
 
 #include "hmiBridge.h"
 #include "cmsis_os.h"
 #include "main.h"
 
-extern USB_Context_t g_usb;
+extern USB_FSM g_usb;
 extern USBD_HandleTypeDef hUsbDeviceHS;
 
 void USB_Task(void *argument)
 {
-    const TickType_t delayMs = 10;
-    char txBuf[64];
-    uint32_t tick = 0;
+		g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
+		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
-    display_USB_state(true);
-
-    for (;;) {
-        tick = osKernelGetTickCount();
-
-        if (tick % 10 == 0)
-        	display_USB_state(true);
-				else
-					display_USB_state(false);
-
-        switch (g_usb.current)
-        {
-        case USB_STATE_INIT:
-            if (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED) {
-                g_usb.current = USB_STATE_CONFIGURED;
-            }
-            break;
-
-        case USB_STATE_CONFIGURED:
-            // Example: send heartbeat every second
-            if (tick - g_usb.lastTick >= 1000) {
-                g_usb.lastTick = tick;
-                snprintf((char*)txBuf, sizeof(txBuf), "Hello from STM %d \r\n", tick);
-
-                USB_SendString(txBuf);
-            }
-            break;
-
-        case USB_STATE_TX:
-            // Wait until TX is done (TX complete callback can reset it)
-
-            break;
-
-        case USB_STATE_RX:
-            USB_HandleRx();
-            g_usb.current = USB_STATE_CONFIGURED;
-            break;
-
-        case USB_STATE_ERROR:
-            USB_HandleError();
-            if (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED)
-                g_usb.current = USB_STATE_CONFIGURED;
-            else
-                g_usb.current = USB_STATE_INIT;
-            break;
-
-        default:
-            g_usb.current = USB_STATE_INIT;
-            break;
-        }
-
-        osDelay(delayMs);
-    }
-}
-
-void USB_OnRx(uint8_t *buf, uint32_t len)
-{
-    buf[len] = 0; // null terminate for safety
-    if (strncmp((char*)buf, "RESET", 5) == 0) {
-        HMI_addSystemMessage("Command: RESET");
-        NVIC_SystemReset();
-    }
-    else if (strncmp((char*)buf, "COLOR", 5) == 0) {
-        HMI_addSystemMessage("Command: COLOR");
-        // change LED color / mode here
-    }
-    else {
-        HMI_addSystemMessage((char*)buf);
-    }
-
-    g_usb.current = USB_STATE_RX;
-}
-
-void USB_SendString(const char* str)
-{
-    if (hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED)
-        return;
-    g_usb.current = USB_STATE_TX;
-    if (CDC_Transmit_HS((uint8_t*)str, strlen(str)) == USBD_OK) {
-    		g_usb.current = USB_STATE_CONFIGURED;
-    }
-		else {
-				g_usb.current = USB_STATE_ERROR;
+		for (;;) {
+				usb_do_actions();       // Do current-state actions
+				usb_eval_transitions(); // Compute transitions + Update HMI screen
+				osDelay(10);            // 100 Hz update rate;
 		}
-    return;
 }
 
-void USB_HandleConfigured(void) {
-
-}
-void USB_HandleRx(void) {
-	// ? Already using USB_OnRx
-
-}
-void USB_HandleError(void) {
-	// Blink red LED
-}
 
 
 void display_USB_state(bool force_update) {
-	if ((g_usb.current == g_usb.previous) && !force_update) {
-		return;
-	}
 	// char msg[64];
 	// snprintf(msg, sizeof(msg), "USB State: %s", USB_GetStateString());
 	// HMI_addSystemMessage(msg);
 
 	HMI_addUsbStateGraphPoint(USB_GetStateID());
 
-	// update previous
-	g_usb.previous = g_usb.current;
 }
 
 

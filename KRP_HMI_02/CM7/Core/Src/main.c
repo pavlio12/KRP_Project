@@ -809,16 +809,16 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 	void LED_Task(void *argument) {
 		for(;;) {
+			/*
 			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin); // Green
 			osDelay(500);
-			/*
 			HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin); // Yellow
 			osDelay(250);
 			HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin); // Red
 			osDelay(250);
-			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
-			osDelay(250);
 			*/
+			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
+			osDelay(500);
 		}
 	}
 	/*

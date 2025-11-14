@@ -9,56 +9,26 @@ def create_gui(on_start, on_stop, on_send):
         description='Message:',
         placeholder='Type message here',
         continuous_update=False,
-        layout=widgets.Layout(width='70%')  # Adjust width for better alignment
+        layout=widgets.Layout(width='50%')  # Adjust width for better alignment
     )
     send_button = widgets.Button(
         description='Send',
         button_style='success',
         icon='paper-plane',
-        layout=widgets.Layout(width='20%')  # Adjust width for better alignment
+        layout=widgets.Layout(width='15%')  # Adjust width for better alignment
     )
     start_button = widgets.Button(
-        description="Start",
+        description="Connect",
         button_style='success',
         icon='play',
-        layout=widgets.Layout(width='100px')
+        layout=widgets.Layout(width='15%')
     )
     stop_button = widgets.Button(
-        description="Stop",
+        description="Disconnect",
         button_style='danger',
         icon='stop',
-        layout=widgets.Layout(width='100px')
+        layout=widgets.Layout(width='15%')
     )
-
-    # Wrap the output_area in a Box with scrollable styling
-    # output_area = widgets.Output()
-    # scrollable_output = widgets.Box(
-    #     [output_area],
-    #     layout=widgets.Layout(
-    #         border='1px solid black',
-    #         height='300px',  # Fixed height
-    #         overflow_y='scroll',  # Enable vertical scrolling
-    #         padding='10px',
-    #         margin='10px 0px'
-    #     )
-    # )
-
-    output_area = widgets.Output(layout=widgets.Layout(
-        border='1px solid gray',
-        height='300px',         # adjust height as needed
-        overflow='auto'
-    ))
-    display(HTML("""
-    <style>
-        /* Assign a class so we can target the actual DOM node */
-        .auto_scroll_output .output_subarea {
-        overflow: auto !important;
-        height: 100% !important;
-        }
-    </style>
-    """))
-    output_area.add_class('auto_scroll_output')
-    display(output_area)
 
     status_label = widgets.Label(value='Disconnected')
 
@@ -90,4 +60,4 @@ def create_gui(on_start, on_stop, on_send):
     start_button.on_click(lambda _: on_start())
     stop_button.on_click(lambda _: on_stop())
 
-    return gui, status_label, output_area
+    return gui, status_label

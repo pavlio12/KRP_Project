@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
+#include "usb_fsm.h"
 
 /* USER CODE BEGIN INCLUDE */
 // #include "usb_task.h"
@@ -111,7 +112,7 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 
-USB_Context_t g_usb = { USB_STATE_INIT, USB_STATE_INIT, 0 };  // current, previous, lastTick
+extern USB_FSM g_usb;
 
 /* USER CODE END EXPORTED_VARIABLES */
 
@@ -267,10 +268,19 @@ static int8_t CDC_Receive_HS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 11 */
 	// Changed by Ondrej Pavlin
-	USB_OnRx(Buf, *Len);
-  USBD_CDC_SetRxBuffer(&hUsbDeviceHS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceHS);
-  return (USBD_OK);
+
+	// enqueue a bounded copy (no blocking)
+	if (g_usb.rxQ) {
+			uint8_t m[64];
+			uint32_t n = (*Len > sizeof(m)) ? sizeof(m) : *Len;
+			memcpy(m, Buf, n);
+			osMessageQueuePut(g_usb.rxQ, m, 0, 0);
+	}
+	g_usb.activity.rx_ready = true;  // pulse for visualization
+
+	USBD_CDC_SetRxBuffer(&hUsbDeviceHS, &Buf[0]);
+	USBD_CDC_ReceivePacket(&hUsbDeviceHS);
+	return (USBD_OK);
   /* USER CODE END 11 */
 }
 
@@ -285,12 +295,7 @@ uint8_t CDC_Transmit_HS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 12 */
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
-  }
-  USBD_CDC_SetTxBuffer(&hUsbDeviceHS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceHS);
+
   /* USER CODE END 12 */
   return result;
 }
@@ -311,46 +316,16 @@ static int8_t CDC_TransmitCplt_HS(uint8_t *Buf, uint32_t *Len, uint8_t epnum)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 14 */
-  UNUSED(Buf);
-  UNUSED(Len);
-  UNUSED(epnum);
   // Changed by Ondrej Pavlin
-  g_usb.current = USB_STATE_CONFIGURED;
+  (void)Buf; (void)Len; (void)epnum;
+  g_usb.activity.tx_busy = false;
+	g_usb.activity.tx_done = true;   // pulse for visualization
   /* USER CODE END 14 */
   return result;
 }
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
-const char* USB_GetStateString(void)
-{
-    switch (g_usb.current)
-    {
-        case USB_STATE_INIT:        return "INIT";
-        case USB_STATE_ATTACHED:    return "ATTACHED";
-        case USB_STATE_CONFIGURED:  return "CONFIGURED";
-        case USB_STATE_TX:          return "TRANSMITTING";
-        case USB_STATE_RX:          return "RECEIVING";
-        case USB_STATE_ERROR:       return "ERROR";
-        case USB_STATE_SUSPENDED:   return "SUSPENDED";
-        default:                    return "UNKNOWN";
-    }
-}
-
-const uint8_t USB_GetStateID(void)
-{
-    switch (g_usb.current)
-    {
-        case USB_STATE_INIT:        return 0;
-        case USB_STATE_ATTACHED:    return 1;
-        case USB_STATE_CONFIGURED:  return 2;
-        case USB_STATE_TX:          return 3;
-        case USB_STATE_RX:          return 4;
-        case USB_STATE_ERROR:       return 5;
-        case USB_STATE_SUSPENDED:   return 6;
-        default:                    return 5; // Default Error
-    }
-}
 
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
