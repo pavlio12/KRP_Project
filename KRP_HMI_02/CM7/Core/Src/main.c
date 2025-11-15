@@ -19,14 +19,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 #include "app_touchgfx.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "hmiBridge.h"
-#include "usbd_cdc_if.h"
+// #include "usbd_cdc_if.h"
 #include "usb_task.h"
 /* USER CODE END Includes */
 
@@ -64,22 +62,10 @@ LTDC_HandleTypeDef hltdc;
 
 QSPI_HandleTypeDef hqspi;
 
+PCD_HandleTypeDef hpcd_USB_OTG_HS;
+
 SDRAM_HandleTypeDef hsdram1;
 
-/* Definitions for TouchGFXTask */
-osThreadId_t TouchGFXTaskHandle;
-const osThreadAttr_t TouchGFXTask_attributes = {
-  .name = "TouchGFXTask",
-  .stack_size = 3048 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for videoTask */
-osThreadId_t videoTaskHandle;
-const osThreadAttr_t videoTask_attributes = {
-  .name = "videoTask",
-  .stack_size = 1000 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
 /* USER CODE BEGIN PV */
 OTM8009A_Object_t OTM8009AObj;
 OTM8009A_IO_t IOCtx;
@@ -97,9 +83,7 @@ static void MX_DSIHOST_DSI_Init(void);
 static void MX_LTDC_Init(void);
 static void MX_CRC_Init(void);
 static void MX_JPEG_Init(void);
-void TouchGFX_Task(void *argument);
-extern void videoTaskFunc(void *argument);
-
+static void MX_USB_OTG_HS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 void LED_Task(void *argument);
 // void USB_Task(void *argument);
@@ -187,69 +171,11 @@ Error_Handler();
   MX_LTDC_Init();
   MX_CRC_Init();
   MX_JPEG_Init();
+  MX_USB_OTG_HS_PCD_Init();
   MX_TouchGFX_Init();
-  /* Call PreOsInit function */
-  MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();     // Init USB device stack
   /* USER CODE END 2 */
-
-  /* Init scheduler */
-  osKernelInitialize();
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* creation of TouchGFXTask */
-  TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
-
-  /* creation of videoTask */
-  videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  // LEDs
-  osThreadId_t ledTaskHandle;
-  const osThreadAttr_t ledTask_attributes = {
-    .name = "ledTask",
-    .priority = (osPriority_t) osPriorityLow,
-    .stack_size = 128 * 4
-  };
-  ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
-
-  // USB
-  osThreadId_t usbTaskHandle;
-  const osThreadAttr_t usbTask_attributes = {
-    .name = "usbTask",
-    .priority = osPriorityNormal,
-    .stack_size = 256 * 4
-  };
-  usbTaskHandle = osThreadNew(USB_Task, NULL, &usbTask_attributes);
-
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -257,6 +183,7 @@ Error_Handler();
   {
     /* USER CODE END WHILE */
 
+  MX_TouchGFX_Process();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -663,6 +590,42 @@ static void MX_QUADSPI_Init(void)
 }
 
 /**
+  * @brief USB_OTG_HS Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USB_OTG_HS_PCD_Init(void)
+{
+
+  /* USER CODE BEGIN USB_OTG_HS_Init 0 */
+
+  /* USER CODE END USB_OTG_HS_Init 0 */
+
+  /* USER CODE BEGIN USB_OTG_HS_Init 1 */
+
+  /* USER CODE END USB_OTG_HS_Init 1 */
+  hpcd_USB_OTG_HS.Instance = USB_OTG_HS;
+  hpcd_USB_OTG_HS.Init.dev_endpoints = 9;
+  hpcd_USB_OTG_HS.Init.speed = PCD_SPEED_HIGH;
+  hpcd_USB_OTG_HS.Init.dma_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.phy_itface = USB_OTG_ULPI_PHY;
+  hpcd_USB_OTG_HS.Init.Sof_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.low_power_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.lpm_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.vbus_sensing_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.use_dedicated_ep1 = DISABLE;
+  hpcd_USB_OTG_HS.Init.use_external_vbus = DISABLE;
+  if (HAL_PCD_Init(&hpcd_USB_OTG_HS) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USB_OTG_HS_Init 2 */
+
+  /* USER CODE END USB_OTG_HS_Init 2 */
+
+}
+
+/**
   * Enable MDMA controller clock
   */
 static void MX_MDMA_Init(void)
@@ -674,7 +637,7 @@ static void MX_MDMA_Init(void)
 
   /* MDMA interrupt initialization */
   /* MDMA_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(MDMA_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(MDMA_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(MDMA_IRQn);
 
 }
@@ -850,26 +813,6 @@ static void MX_GPIO_Init(void)
 	*/
 
 /* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_TouchGFX_Task */
-/**
-  * @brief  Function implementing the TouchGFXTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_TouchGFX_Task */
-__weak void TouchGFX_Task(void *argument)
-{
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
 
  /* MPU Configuration */
 

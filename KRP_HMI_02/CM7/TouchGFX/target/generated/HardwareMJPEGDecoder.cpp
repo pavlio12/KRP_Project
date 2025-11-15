@@ -17,17 +17,21 @@
   */
 
 #include <HardwareMJPEGDecoder.hpp>
+#include <touchgfx/hal/BlitOp.hpp>
 
 extern "C"
 {
 #include <string.h>
 #include <stm32h7xx_hal.h>
 
+#include "tx_api.h"
+
     uint32_t JPEG_Decode_DMA(JPEG_HandleTypeDef* hjpeg, uint8_t* input, uint32_t chunkSizeIn, uint8_t* output);
     uint32_t JPEG_OutputHandler(JPEG_HandleTypeDef* hjpeg);
     void HAL_JPEG_DecodeCpltCallback(JPEG_HandleTypeDef* hjpeg);
     void HAL_JPEG_ErrorCallback(JPEG_HandleTypeDef* hjpeg);
     void HAL_JPEG_DataReadyCallback(JPEG_HandleTypeDef* hjpeg, uint8_t* pDataOut, uint32_t OutDataLength);
+    void DMA2D_CropBuffer(JPEG_Data_BufferTypeDef& job);
     void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job);
     void DMA2D_ExternalJobCompleted(JPEG_Data_BufferTypeDef& job);
 }
@@ -45,6 +49,7 @@ uint32_t MCU_TotalNb = 0;
 touchgfx::DMA_Interface* DMA2D_reference;
 volatile uint32_t JPEG_OUT_Write_BufferIndex = 0;
 uint32_t FrameBufferWidth;
+volatile uint32_t line_count = 0;
 }
 
 #define MCU_WIDTH_PIXELS            ((uint32_t)16)
@@ -59,9 +64,11 @@ uint8_t MCU_Data_OutBuffer0[CHUNK_SIZE_OUT] LOCATION_ATTRIBUTE_32("TouchGFX_MCU_
 LOCATION_PRAGMA_32("TouchGFX_MCU_Data_OutBuffer1")
 uint8_t MCU_Data_OutBuffer1[CHUNK_SIZE_OUT] LOCATION_ATTRIBUTE_32("TouchGFX_MCU_Data_OutBuffer1");
 
+uint8_t MCU_Cropping_Buffer[MCU_WIDTH_PIXELS * MCU_HEIGHT_PIXELS * 3];
+
 __IO uint32_t MCU_BlockIndex = 0;
 
-SEM_TYPE semDecodingDone;
+TX_SEMAPHORE semDecodingDone;
 
 extern JPEG_ConfTypeDef* JPEG_Info;
 extern JPEG_HandleTypeDef hjpeg;
@@ -71,8 +78,8 @@ volatile uint32_t DMA2D_CopyBufferEnd = 0;
 
 JPEG_Data_BufferTypeDef Jpeg_OUT_BufferTab[NB_OUTPUT_DATA_BUFFERS] =
 {
-    {JPEG_BUFFER_EMPTY, MCU_Data_OutBuffer0, 0, 0},
-    {JPEG_BUFFER_EMPTY, MCU_Data_OutBuffer1, 0, 0},
+    {JPEG_BUFFER_EMPTY, MCU_Data_OutBuffer0, 0, 0, NULL, false, false, 0, false},
+    {JPEG_BUFFER_EMPTY, MCU_Data_OutBuffer1, 0, 0, NULL, false, false, 0, false},
 };
 
 static struct JPEG_MCU_RGB_Converter
@@ -82,6 +89,17 @@ static struct JPEG_MCU_RGB_Converter
     uint32_t LastLineHeight;
     uint32_t MCU_pr_line;
     uint32_t bytes_pr_pixel;
+    uint32_t startY;
+    uint32_t endY;
+    uint32_t startX;
+    uint32_t endX;
+    uint32_t MCUStart;
+    uint32_t MCUEnd;
+    uint32_t MCU_pr_job;
+    uint32_t firstColOffset;
+    uint32_t firstRowOffset;
+    uint32_t lastColOffset;
+    uint32_t lastRowOffset;
 } JPEG_ConvertorParams;
 
 HardwareMJPEGDecoder::HardwareMJPEGDecoder()
@@ -95,7 +113,7 @@ HardwareMJPEGDecoder::HardwareMJPEGDecoder()
     videoInfo.number_of_frames = 0;
 
     /* Create decoding semaphore */
-    semDecodingDone = SEM_CREATE();
+    tx_semaphore_create(&semDecodingDone, (CHAR*) "Decoding sem", 0);
 }
 
 int HardwareMJPEGDecoder::compare(const uint32_t offset, const char* str, uint32_t num)
@@ -420,7 +438,7 @@ void HardwareMJPEGDecoder::decodeMJPEGFrame(const uint8_t* const mjpgdata, const
             /* If nothing to do, allow other tasks */
             if (JpegProcessing_End == 2)
             {
-                SEM_WAIT(semDecodingDone);
+                tx_semaphore_get(&semDecodingDone, TX_WAIT_FOREVER);
             }
         } while (JpegProcessing_End != 1);
 
@@ -440,15 +458,46 @@ bool HardwareMJPEGDecoder::decodeFrame(const touchgfx::Rect& area, uint8_t* fram
     /*  Ensure whole frame is read */
     const uint8_t* mjpgdata = readData(currentMovieOffset + 8, length);
 
-    if (frameBuffer) /* only decode if buffers are assigned. */
+    /* Update JPEG conversion parameters */
+    JPEG_ConvertorParams.bytes_pr_pixel = 3;
+    JPEG_ConvertorParams.WidthExtend = videoInfo.frame_width;
+    if ((JPEG_ConvertorParams.WidthExtend % 16) != 0)
     {
-        JPEG_Decode_DMA(&hjpeg, const_cast<uint8_t*>(mjpgdata), length, frameBuffer);
-
-        do
-        {
-            JpegProcessing_End = JPEG_OutputHandler(&hjpeg);
-        } while (JpegProcessing_End == 0);
+        JPEG_ConvertorParams.WidthExtend += 16 - (JPEG_ConvertorParams.WidthExtend % 16);
     }
+    JPEG_ConvertorParams.ScaledWidth = 800 * JPEG_ConvertorParams.bytes_pr_pixel;
+    JPEG_ConvertorParams.MCU_pr_line = JPEG_ConvertorParams.WidthExtend / MCU_WIDTH_PIXELS;
+    JPEG_ConvertorParams.startY = area.y;
+    JPEG_ConvertorParams.endY = MIN((uint32_t)area.bottom(), videoInfo.frame_height);
+    JPEG_ConvertorParams.startX = area.x;
+    JPEG_ConvertorParams.endX = MIN((uint32_t)area.right(), videoInfo.frame_width);
+    JPEG_ConvertorParams.MCUStart = JPEG_ConvertorParams.startX / MCU_WIDTH_PIXELS;
+    JPEG_ConvertorParams.MCUEnd = (JPEG_ConvertorParams.endX + MCU_WIDTH_PIXELS - 1) / MCU_WIDTH_PIXELS; // Ceil division
+    JPEG_ConvertorParams.MCU_pr_job = JPEG_ConvertorParams.MCUEnd - JPEG_ConvertorParams.MCUStart;
+    JPEG_ConvertorParams.firstColOffset = JPEG_ConvertorParams.startX % MCU_WIDTH_PIXELS;
+    JPEG_ConvertorParams.firstRowOffset = JPEG_ConvertorParams.startY % MCU_HEIGHT_PIXELS;
+    JPEG_ConvertorParams.lastColOffset = (JPEG_ConvertorParams.endX % MCU_WIDTH_PIXELS) == 0 ? 0 : MCU_WIDTH_PIXELS - (JPEG_ConvertorParams.endX % MCU_WIDTH_PIXELS);
+    JPEG_ConvertorParams.lastRowOffset = (JPEG_ConvertorParams.endY % MCU_HEIGHT_PIXELS) == 0 ? 0 : MCU_HEIGHT_PIXELS - (JPEG_ConvertorParams.endY % MCU_HEIGHT_PIXELS);
+
+    FrameBufferWidth = framebuffer_width;
+    FrameBufferAddress = frameBuffer;
+
+    JPEG_Decode_DMA(&hjpeg, const_cast<uint8_t*>(mjpgdata), length, frameBuffer);
+    DMA2D_reference = dma;
+    do
+    {
+        JpegProcessing_End = JPEG_OutputHandler(&hjpeg);
+
+        /* If nothing to do, wait */
+        if (JpegProcessing_End == 2)
+        {
+            tx_semaphore_get(&semDecodingDone, TX_WAIT_FOREVER);
+        }
+    } while (JpegProcessing_End != 1);
+
+    /* reset flag */
+    Jpeg_HWDecodingEnd = 0;
+    DMA2D_CopyBufferEnd = 0;
 
     return true;
 }
@@ -515,6 +564,7 @@ extern "C"
         JPEG_InputImageAddress = (uint32_t)input;
         JPEG_InputImageSize_Bytes = chunkSizeIn;
         MCU_BlockIndex = 0;
+        line_count = 0;
 
         /* Init buffers */
         for (uint32_t i = 0; i < NB_OUTPUT_DATA_BUFFERS; ++i)
@@ -522,6 +572,16 @@ extern "C"
             Jpeg_OUT_BufferTab[i].State = JPEG_BUFFER_EMPTY;
             Jpeg_OUT_BufferTab[i].DataBufferSize = 0;
             Jpeg_OUT_BufferTab[i].MCU_index = 0;
+            Jpeg_OUT_BufferTab[i].OutputBuffer = NULL;
+            Jpeg_OUT_BufferTab[i].MCU_drawn = 0;
+            Jpeg_OUT_BufferTab[i].DoCropping = false;
+            Jpeg_OUT_BufferTab[i].FirstJob = false;
+            Jpeg_OUT_BufferTab[i].LastJob = false;
+        }
+        Jpeg_OUT_BufferTab[0].FirstJob = true;
+        if (JPEG_ConvertorParams.firstRowOffset != 0)
+        {
+            Jpeg_OUT_BufferTab[0].DoCropping = true;
         }
 
         /* Do not return from this function until done with decoding all chunks. */
@@ -613,31 +673,63 @@ extern "C"
      */
     void HAL_JPEG_DataReadyCallback(JPEG_HandleTypeDef* hjpeg, uint8_t* pDataOut, uint32_t OutDataLength)
     {
+        line_count += MCU_HEIGHT_PIXELS;
+
+        Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].OutputBuffer = FrameBufferAddress;
+
+        /* Increment framebuffer */
+        FrameBufferAddress += FrameBufferWidth * MCU_HEIGHT_PIXELS * JPEG_ConvertorParams.bytes_pr_pixel;
+
+        /* Decode until we reach area to draw */
+        if (line_count <= JPEG_ConvertorParams.startY)
+        {
+            HAL_JPEG_ConfigOutputBuffer(hjpeg, Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DataBuffer, MCU_CHROMA_420_SIZE_BYTES * JPEG_ConvertorParams.MCU_pr_line);
+            return;
+        }
+
         Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].State = JPEG_BUFFER_FULL;
         Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DataBufferSize = OutDataLength;
-        const uint32_t MCU = MCU_BlockIndex;
-        Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].MCU_index = MCU;
+        Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].MCU_drawn = 0;
 
-        MCU_BlockIndex += JPEG_ConvertorParams.MCU_pr_line;
-
-        JPEG_OUT_Write_BufferIndex++;
-        if (JPEG_OUT_Write_BufferIndex >= NB_OUTPUT_DATA_BUFFERS)
+        /* Left column requires cropping */
+        if (JPEG_ConvertorParams.firstColOffset != 0)
         {
-            JPEG_OUT_Write_BufferIndex = 0;
+            Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DoCropping = true;
         }
 
-        /* if the other buffer is full, then ui thread might be converting it */
-        if (Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].State != JPEG_BUFFER_EMPTY)
+        if (line_count < JPEG_ConvertorParams.endY)
         {
+            Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].LastJob = false;
+
+            JPEG_OUT_Write_BufferIndex++;
+            if (JPEG_OUT_Write_BufferIndex >= NB_OUTPUT_DATA_BUFFERS)
+            {
+                JPEG_OUT_Write_BufferIndex = 0;
+            }
+
+            /* if the other buffer is full, then ui thread might be converting it */
+            if (Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].State != JPEG_BUFFER_EMPTY)
+            {
+                HAL_JPEG_Pause(hjpeg, JPEG_PAUSE_RESUME_OUTPUT);
+                JPEG_output_is_paused = 1;
+            }
+
+            HAL_JPEG_ConfigOutputBuffer(hjpeg, Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DataBuffer, MCU_CHROMA_420_SIZE_BYTES * JPEG_ConvertorParams.MCU_pr_line);
+        }
+
+        /* Stop decoding when we exit area to draw */
+        if (line_count >= JPEG_ConvertorParams.endY)
+        {
+            Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].LastJob = true;
+            Jpeg_HWDecodingEnd = 1;
+
             HAL_JPEG_Pause(hjpeg, JPEG_PAUSE_RESUME_OUTPUT);
-            JPEG_output_is_paused = 1;
         }
-        HAL_JPEG_ConfigOutputBuffer(hjpeg, Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DataBuffer, MCU_CHROMA_420_SIZE_BYTES * JPEG_ConvertorParams.MCU_pr_line);
 
         /* Signal Hardware Decoding to wake up */
-        if (!DMA2D_reference->isDMARunning() && !DMA2D_reference->getReserved())
+        if (!DMA2D_reference->isDMARunning())
         {
-            SEM_POST(semDecodingDone);
+            tx_semaphore_put(&semDecodingDone);
         }
     }
 
@@ -675,6 +767,11 @@ uint32_t JPEG_OutputHandler(JPEG_HandleTypeDef* hjpeg)
     /* Decode frame complete */
     if (Jpeg_HWDecodingEnd && DMA2D_CopyBufferEnd)
     {
+        /* Abort any ongoing operations */
+        if (HAL_JPEG_GetState(hjpeg) == HAL_JPEG_STATE_BUSY_DECODING)
+        {
+            HAL_JPEG_Abort(hjpeg);
+        }
         return 1;
     }
 
@@ -701,28 +798,97 @@ uint32_t JPEG_OutputHandler(JPEG_HandleTypeDef* hjpeg)
  */
 void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job)
 {
-    uint32_t yRef, refline;
-    yRef = ((job.MCU_index * MCU_WIDTH_PIXELS) / JPEG_ConvertorParams.WidthExtend) * MCU_WIDTH_PIXELS;
-    refline = JPEG_ConvertorParams.ScaledWidth * yRef;
+    const uint32_t width = JPEG_ConvertorParams.MCU_pr_job * MCU_WIDTH_PIXELS - job.MCU_drawn * MCU_WIDTH_PIXELS - JPEG_ConvertorParams.lastColOffset;
+    const uint32_t scaledWidth = (width % MCU_WIDTH_PIXELS) == 0 ? 0 : MCU_WIDTH_PIXELS - (width % MCU_WIDTH_PIXELS);
+    const uint32_t srcOffset = (JPEG_ConvertorParams.MCUStart + job.MCU_drawn) * MCU_CHROMA_420_SIZE_BYTES;
+    const uint32_t dstOffset = JPEG_ConvertorParams.MCUStart * MCU_WIDTH_PIXELS * JPEG_ConvertorParams.bytes_pr_pixel
+                               + job.MCU_drawn * MCU_WIDTH_PIXELS * JPEG_ConvertorParams.bytes_pr_pixel;
+
+    /* Mark job as fully drawn */
+    job.MCU_drawn = JPEG_ConvertorParams.MCU_pr_job;
 
     /* DMA2D OPFCCR register configuration */
     WRITE_REG(DMA2D->OPFCCR, DMA2D_OUTPUT_RGB888);
 
     /* Configure DMA2D data size */
-    if (job.MCU_index >= (MCU_TotalNb - JPEG_ConvertorParams.MCU_pr_line))  /*  Last line of frame */
+    if (job.LastJob)  /* Last line of frame */
     {
-        WRITE_REG(DMA2D->NLR, ((MCU_HEIGHT_PIXELS - JPEG_ConvertorParams.LastLineHeight) | ((MCU_WIDTH_PIXELS * JPEG_ConvertorParams.MCU_pr_line) << DMA2D_NLR_PL_Pos)));
+        WRITE_REG(DMA2D->NLR, (MCU_HEIGHT_PIXELS - JPEG_ConvertorParams.lastRowOffset) | (width << DMA2D_NLR_PL_Pos));
     }
     else
     {
-        WRITE_REG(DMA2D->NLR, (MCU_HEIGHT_PIXELS | ((MCU_WIDTH_PIXELS * JPEG_ConvertorParams.MCU_pr_line) << DMA2D_NLR_PL_Pos)));
+        WRITE_REG(DMA2D->NLR, MCU_HEIGHT_PIXELS | (width << DMA2D_NLR_PL_Pos));
     }
 
     /* Configure DMA2D destination address */
-    WRITE_REG(DMA2D->OMAR, (reinterpret_cast<uint32_t>(FrameBufferAddress + refline)));
+    WRITE_REG(DMA2D->OMAR, reinterpret_cast<uint32_t>(job.OutputBuffer + dstOffset));
 
     /* DMA2D OOR register configuration */
-    WRITE_REG(DMA2D->OOR, FrameBufferWidth - (MCU_WIDTH_PIXELS * JPEG_ConvertorParams.MCU_pr_line));
+    WRITE_REG(DMA2D->OOR, FrameBufferWidth - width);
+
+    /* DMA2D FGOR register configuration */
+    WRITE_REG(DMA2D->FGOR, scaledWidth);
+
+    /* DMA2D FGPFCCR register configuration */
+    WRITE_REG(DMA2D->FGPFCCR, DMA2D_INPUT_YCBCR | (DMA2D_CSS_420 << DMA2D_FGPFCCR_CSS_Pos) | (DMA2D_REPLACE_ALPHA << DMA2D_FGPFCCR_AM_Pos) | (0xFFU << DMA2D_FGPFCCR_ALPHA_Pos));
+
+    /* Configure DMA2D source address */
+    WRITE_REG(DMA2D->FGMAR, reinterpret_cast<uint32_t>(job.DataBuffer + srcOffset));
+
+    /* Configure DMA2D contol register */
+    WRITE_REG(DMA2D->CR, DMA2D_M2M_PFC | DMA2D_IT_TC | DMA2D_CR_START | DMA2D_IT_CE | DMA2D_IT_TE);
+}
+
+/**
+ * @brief  Configures external DMA2D job to copy and crop YCbCr data to an RGB cropping buffer
+ * @param job: External job reference
+ * @retval None
+ */
+void DMA2D_CropBuffer(JPEG_Data_BufferTypeDef& job)
+{
+    const uint32_t colLeftOffset = job.MCU_drawn == 0 ? JPEG_ConvertorParams.firstColOffset : 0;
+    const uint32_t colRightOffset = job.MCU_drawn == JPEG_ConvertorParams.MCU_pr_job - 1 ? JPEG_ConvertorParams.lastColOffset : 0;
+    const uint32_t rowTopOffset = job.FirstJob ? JPEG_ConvertorParams.firstRowOffset : 0;
+    const uint32_t rowBottomOffset = job.LastJob ? JPEG_ConvertorParams.lastRowOffset : 0;
+    const uint32_t srcOffset = (JPEG_ConvertorParams.MCUStart + job.MCU_drawn) * MCU_CHROMA_420_SIZE_BYTES;
+    const uint32_t dstOffset = JPEG_ConvertorParams.MCUStart * MCU_WIDTH_PIXELS * JPEG_ConvertorParams.bytes_pr_pixel
+                               + job.MCU_drawn * MCU_WIDTH_PIXELS * JPEG_ConvertorParams.bytes_pr_pixel
+                               + rowTopOffset * JPEG_ConvertorParams.bytes_pr_pixel * FrameBufferWidth
+                               + colLeftOffset * JPEG_ConvertorParams.bytes_pr_pixel;
+    const uint32_t cropSrcOffset = colLeftOffset * JPEG_ConvertorParams.bytes_pr_pixel
+                                   + rowTopOffset * JPEG_ConvertorParams.bytes_pr_pixel * MCU_HEIGHT_PIXELS;
+
+    /* Update job and assert if more cropping is needed */
+    job.MCU_drawn++;
+    if ((JPEG_ConvertorParams.firstRowOffset == 0) || !job.FirstJob)
+    {
+        job.DoCropping = false;
+    }
+
+    /* Configure BlitOp */
+    touchgfx::BlitOp blitOp;
+    blitOp.operation = touchgfx::BLIT_OP_COPY;
+    blitOp.pSrc = reinterpret_cast<uint16_t*>(MCU_Cropping_Buffer + cropSrcOffset);
+    blitOp.nSteps = MCU_WIDTH_PIXELS - colLeftOffset - colRightOffset;
+    blitOp.nLoops = MCU_HEIGHT_PIXELS - rowTopOffset - rowBottomOffset;
+    blitOp.srcLoopStride = MCU_WIDTH_PIXELS;
+    blitOp.dstLoopStride = FrameBufferWidth;
+    blitOp.pDst = reinterpret_cast<uint16_t*>(job.OutputBuffer + dstOffset);
+    blitOp.srcFormat = touchgfx::Bitmap::RGB888;
+    blitOp.dstFormat = touchgfx::Bitmap::RGB888;
+    DMA2D_reference->addToQueue(blitOp);
+
+    /* DMA2D OPFCCR register configuration */
+    WRITE_REG(DMA2D->OPFCCR, DMA2D_OUTPUT_RGB888);
+
+    /* Configure DMA2D data size */
+    WRITE_REG(DMA2D->NLR, MCU_HEIGHT_PIXELS | (MCU_WIDTH_PIXELS << DMA2D_NLR_PL_Pos));
+
+    /* Configure DMA2D destination address */
+    WRITE_REG(DMA2D->OMAR, reinterpret_cast<uint32_t>(MCU_Cropping_Buffer));
+
+    /* DMA2D OOR register configuration */
+    WRITE_REG(DMA2D->OOR, 0);
 
     /* DMA2D FGOR register configuration */
     WRITE_REG(DMA2D->FGOR, 0);
@@ -731,7 +897,7 @@ void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job)
     WRITE_REG(DMA2D->FGPFCCR, DMA2D_INPUT_YCBCR | (DMA2D_CSS_420 << DMA2D_FGPFCCR_CSS_Pos) | (DMA2D_REPLACE_ALPHA << DMA2D_FGPFCCR_AM_Pos) | (0xFFU << DMA2D_FGPFCCR_ALPHA_Pos));
 
     /* Configure DMA2D source address */
-    WRITE_REG(DMA2D->FGMAR, reinterpret_cast<uint32_t>(job.DataBuffer));
+    WRITE_REG(DMA2D->FGMAR, reinterpret_cast<uint32_t>(job.DataBuffer + srcOffset));
 
     /* Configure DMA2D contol register */
     WRITE_REG(DMA2D->CR, DMA2D_M2M_PFC | DMA2D_IT_TC | DMA2D_CR_START | DMA2D_IT_CE | DMA2D_IT_TE);
@@ -744,21 +910,27 @@ void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job)
  */
 void DMA2D_ExternalJobCompleted(JPEG_Data_BufferTypeDef& job)
 {
-    job.State = JPEG_BUFFER_EMPTY;
-    job.DataBufferSize = 0;
-
-    JPEG_OUT_Read_BufferIndex++;
-    if (JPEG_OUT_Read_BufferIndex >= NB_OUTPUT_DATA_BUFFERS)
+    /* Mark job done if all MCUs are drawn */
+    if (job.MCU_drawn == JPEG_ConvertorParams.MCU_pr_job)
     {
-        JPEG_OUT_Read_BufferIndex = 0;
-    }
+        job.State = JPEG_BUFFER_EMPTY;
+        job.DataBufferSize = 0;
+        job.DoCropping = false;
+        job.FirstJob = false;
 
-    /* Check if last line */
-    if (job.MCU_index >= (MCU_TotalNb - JPEG_ConvertorParams.MCU_pr_line))
-    {
-        DMA2D_CopyBufferEnd = 1;
-    }
+        JPEG_OUT_Read_BufferIndex++;
+        if (JPEG_OUT_Read_BufferIndex >= NB_OUTPUT_DATA_BUFFERS)
+        {
+            JPEG_OUT_Read_BufferIndex = 0;
+        }
 
-    /* Signal decoder thread to wake up and continue decoding */
-    SEM_POST(semDecodingDone);
+        /* Check if last line */
+        if (job.LastJob)
+        {
+            DMA2D_CopyBufferEnd = 1;
+        }
+
+        /* Signal decoder thread to wake up and continue decoding */
+        tx_semaphore_put(&semDecodingDone);
+    }
 }

@@ -30,8 +30,8 @@
 #include <touchgfx/hal/GPIO.hpp>
 #include "../Components/otm8009a/otm8009a.h"
 #include <STM32H7Instrumentation.hpp>
-#include "FreeRTOS.h"
-#include "task.h"
+// #include "FreeRTOS.h"
+// #include "task.h"
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN private defines */

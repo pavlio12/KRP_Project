@@ -21,27 +21,6 @@
 #include <MJPEGDecoder.hpp>
 #include <STM32DMA.hpp>
 
-#include "cmsis_os.h"
-#if defined(osCMSIS) && (osCMSIS < 0x20000)
-#define MUTEX_CREATE() osMutexCreate(0)
-#define MUTEX_LOCK(m) osMutexWait(m, osWaitForever)
-#define MUTEX_TYPE osMutexId
-#define MUTEX_UNLOCK(m) osMutexRelease(m)
-#define SEM_CREATE() osSemaphoreCreate(0, 1)
-#define SEM_POST(s) osSemaphoreRelease(s)
-#define SEM_TYPE osSemaphoreId
-#define SEM_WAIT(s) osSemaphoreWait(s, osWaitForever)
-#else
-#define MUTEX_CREATE() osMutexNew(0)
-#define MUTEX_LOCK(m) osMutexAcquire(m, osWaitForever)
-#define MUTEX_TYPE osMutexId_t
-#define MUTEX_UNLOCK(m) osMutexRelease(m)
-#define SEM_CREATE() osSemaphoreNew(1, 0, 0)
-#define SEM_POST(s) osSemaphoreRelease(s)
-#define SEM_TYPE osSemaphoreId_t
-#define SEM_WAIT(s) osSemaphoreAcquire(s, osWaitForever)
-#endif
-
 class HardwareMJPEGDecoder : public MJPEGDecoder
 {
 public:

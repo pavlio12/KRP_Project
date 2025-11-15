@@ -22,6 +22,11 @@
 #define  __RTE_COMPONENTS_H__
 
 /* Defines ------------------------------------------------------------------*/
+/* STMicroelectronics.X-CUBE-AZRTOS-H7.3.4.0 */
+#define USBXDEVICE_ENABLED
+#define UX_DEVICE_CONTROLLERS_ENABLED
+#define UX_DEVICE_CDC_ACM
+#define THREADX_ENABLED
 /* STMicroelectronics.X-CUBE-TOUCHGFX.4.26.0 */
 #define TOUCHGFX_APP
 

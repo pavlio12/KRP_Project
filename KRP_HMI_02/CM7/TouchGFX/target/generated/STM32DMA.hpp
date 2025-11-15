@@ -21,27 +21,6 @@
 #include <touchgfx/Bitmap.hpp>
 #include <touchgfx/hal/DMA.hpp>
 
-#include "cmsis_os.h"
-#if defined(osCMSIS) && (osCMSIS < 0x20000)
-#define MUTEX_CREATE() osMutexCreate(0)
-#define MUTEX_LOCK(m) osMutexWait(m, osWaitForever)
-#define MUTEX_TYPE osMutexId
-#define MUTEX_UNLOCK(m) osMutexRelease(m)
-#define SEM_CREATE() osSemaphoreCreate(0, 1)
-#define SEM_POST(s) osSemaphoreRelease(s)
-#define SEM_TYPE osSemaphoreId
-#define SEM_WAIT(s) osSemaphoreWait(s, osWaitForever)
-#else
-#define MUTEX_CREATE() osMutexNew(0)
-#define MUTEX_LOCK(m) osMutexAcquire(m, osWaitForever)
-#define MUTEX_TYPE osMutexId_t
-#define MUTEX_UNLOCK(m) osMutexRelease(m)
-#define SEM_CREATE() osSemaphoreNew(1, 0, 0)
-#define SEM_POST(s) osSemaphoreRelease(s)
-#define SEM_TYPE osSemaphoreId_t
-#define SEM_WAIT(s) osSemaphoreAcquire(s, osWaitForever)
-#endif
-
 #define JPEG_BUFFER_EMPTY 0
 #define JPEG_BUFFER_FULL  1
 #define NB_OUTPUT_DATA_BUFFERS 2
@@ -55,10 +34,16 @@ typedef struct
     uint8_t* DataBuffer;
     uint32_t DataBufferSize;
     uint32_t MCU_index;
+    uint8_t* OutputBuffer;
+    bool FirstJob;
+    bool LastJob;
+    uint32_t MCU_drawn;
+    bool DoCropping;
 } JPEG_Data_BufferTypeDef;
 
 extern JPEG_Data_BufferTypeDef Jpeg_OUT_BufferTab[NB_OUTPUT_DATA_BUFFERS];
 
+extern "C" void DMA2D_CropBuffer(JPEG_Data_BufferTypeDef& job);
 extern "C" void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job);
 extern "C" void DMA2D_ExternalJobCompleted(JPEG_Data_BufferTypeDef& job);
 
@@ -152,7 +137,7 @@ public:
             executeCompleted();
 
             /* Start new external job if next buffer is full */
-            if (Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex].State == JPEG_BUFFER_FULL && !DMA2D_CopyBufferEnd && !isRunning && !isReserved)
+            if (Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex].State == JPEG_BUFFER_FULL && !DMA2D_CopyBufferEnd && !isRunning)
             {
                 started_by_external_job = true;
                 externalJobExecute();
@@ -173,18 +158,16 @@ public:
 
     virtual void start()
     {
-        MUTEX_LOCK(mutexIsRunning);
         if (!queue.isEmpty() && isAllowed && !isRunning)
         {
             started_by_external_job = false;
             execute();
         }
-        else if ((Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex].State == JPEG_BUFFER_FULL) && !isRunning && !isReserved)
+        else if ((Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex].State == JPEG_BUFFER_FULL) && !isRunning)
         {
             started_by_external_job = true;
             externalJobExecute();
         }
-        MUTEX_UNLOCK(mutexIsRunning);
     }
 
 protected:
@@ -236,14 +219,20 @@ protected:
     void externalJobExecute()
     {
         isRunning = true;
-        DMA2D_CopyBuffer(Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex]);
+        if (Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex].DoCropping)
+        {
+            DMA2D_CropBuffer(Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex]);
+        }
+        else
+        {
+            DMA2D_CopyBuffer(Jpeg_OUT_BufferTab[JPEG_OUT_Read_BufferIndex]);
+        }
     }
 
 private:
     touchgfx::LockFreeDMA_Queue dma_queue;
     touchgfx::BlitOp queue_storage[96];
     bool started_by_external_job;
-    MUTEX_TYPE mutexIsRunning;
 
     /**
      * @fn void STM32DMA::getChromARTInputFormat()

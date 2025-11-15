@@ -119,7 +119,6 @@ public:
     virtual void unlockFrameBuffer()
     {
         HAL::unlockFrameBuffer();
-        dma.start();
     }
 
     /**

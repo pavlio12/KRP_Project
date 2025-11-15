@@ -19,14 +19,27 @@
 #include <touchgfx/hal/HAL.hpp>
 #include <touchgfx/hal/OSWrappers.hpp>
 
-#include <cmsis_os2.h>
+#include <stm32h7xx.h>
+
+#include "tx_api.h"
+#include "tx_byte_pool.h"
+
 #include <cassert>
 
-static osSemaphoreId_t frame_buffer_sem = NULL;
-static osMessageQueueId_t vsync_queue = NULL;
+// tx_thread.h is not C++ compatible, declare used symbols here as externals
+extern "C" volatile UINT _tx_thread_preempt_disable;
+extern "C" VOID _tx_thread_system_preempt_check(VOID);
 
-// Just a dummy value to insert in the VSYNC queue.
-static uint32_t dummy = 0x5a;
+#define OSWRAPPER_BYTE_POOL_SIZE    TX_BYTE_POOL_MIN
+#define OSWRAPPER_QUEUE_SIZE        sizeof(ULONG)
+
+static uint8_t oswrapper_pool_mem[OSWRAPPER_BYTE_POOL_SIZE];
+static TX_BYTE_POOL oswrapper_byte_pool;
+static TX_SEMAPHORE frame_buffer_sem = { 0 };
+static TX_QUEUE vsync_q = { 0 };
+
+// Just a dummy message to insert in the VSYNC queue.
+static ULONG dummy_msg = 0x5A5A5A5A;
 
 using namespace touchgfx;
 
@@ -35,13 +48,34 @@ using namespace touchgfx;
  */
 void OSWrappers::initialize()
 {
-    // Create a queue of length 1
-    frame_buffer_sem = osSemaphoreNew(1, 1, NULL); // Binary semaphore
-    assert((frame_buffer_sem != NULL) && "Creation of framebuffer semaphore failed");
+    CHAR* pointer;
+
+    /* Create a byte memory pool from which to allocate the thread stacks.  */
+    if (tx_byte_pool_create(&oswrapper_byte_pool, (CHAR*) "OSWrapper Byte Pool", oswrapper_pool_mem,
+                            OSWRAPPER_BYTE_POOL_SIZE) != TX_SUCCESS)
+    {
+        assert(0 && "Failed to create OSWrapper Pool memory!");
+    }
+
+    /* Allocate the vsync_q.  */
+    if (tx_byte_allocate(&oswrapper_byte_pool, (VOID**) &pointer,
+                         OSWRAPPER_QUEUE_SIZE, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        assert(0 && "Failed to allocate memory for the Vsync Message Queue!");
+    }
 
     // Create a queue of length 1
-    vsync_queue = osMessageQueueNew(1, 4, NULL);
-    assert((vsync_queue != NULL) && "Creation of vsync message queue failed");
+    if (tx_queue_create(&vsync_q, (CHAR*) "Vsync Message Queue", TX_1_ULONG,
+                        pointer, OSWRAPPER_QUEUE_SIZE) != TX_SUCCESS)
+    {
+        assert(0 && "Failed to create Vsync Message Queue!");
+    }
+
+    // Create the Framebuffer Semaphore (Binary)
+    if (tx_semaphore_create(&frame_buffer_sem, (CHAR*) "FrameBuffer Semaphore", 1) != TX_SUCCESS)
+    {
+        assert(0 && "Failed to create FrameBuffer Semaphore!");
+    }
 }
 
 /*
@@ -49,7 +83,10 @@ void OSWrappers::initialize()
  */
 void OSWrappers::takeFrameBufferSemaphore()
 {
-    osSemaphoreAcquire(frame_buffer_sem, osWaitForever);
+    if (tx_semaphore_get(&frame_buffer_sem, TX_WAIT_FOREVER) != TX_SUCCESS)
+    {
+        assert(0 && "Failed to get FrameBuffer Semaphore!");
+    }
 }
 
 /*
@@ -57,7 +94,13 @@ void OSWrappers::takeFrameBufferSemaphore()
  */
 void OSWrappers::giveFrameBufferSemaphore()
 {
-    osSemaphoreRelease(frame_buffer_sem);
+    if (!frame_buffer_sem.tx_semaphore_count)
+    {
+        if (tx_semaphore_put(&frame_buffer_sem) != TX_SUCCESS)
+        {
+            assert(0 && "Failed to put FrameBuffer Semaphore!");
+        }
+    }
 }
 
 /*
@@ -69,7 +112,12 @@ void OSWrappers::giveFrameBufferSemaphore()
  */
 void OSWrappers::tryTakeFrameBufferSemaphore()
 {
-    osSemaphoreAcquire(frame_buffer_sem, 0);
+    if (tx_semaphore_get(&frame_buffer_sem, TX_NO_WAIT) != TX_SUCCESS)
+    {
+        // Typically we should inform the requester about failing to get this semaphore
+        // Maybe we should update the prototype of this method to return the result of the try
+        // assert(0 && "Failed to get FrameBuffer Semaphore!");
+    }
 }
 
 /*
@@ -81,7 +129,19 @@ void OSWrappers::tryTakeFrameBufferSemaphore()
  */
 void OSWrappers::giveFrameBufferSemaphoreFromISR()
 {
-    osSemaphoreRelease(frame_buffer_sem);
+    TX_INTERRUPT_SAVE_AREA
+    TX_DISABLE;
+    _tx_thread_preempt_disable++;
+    if (!frame_buffer_sem.tx_semaphore_count)
+    {
+        if (tx_semaphore_put(&frame_buffer_sem) != TX_SUCCESS)
+        {
+            assert(0 && "Failed to put FrameBuffer Semaphore!");
+        }
+    }
+    _tx_thread_preempt_disable--;
+    TX_RESTORE;
+    _tx_thread_system_preempt_check();
 }
 
 /*
@@ -92,7 +152,21 @@ void OSWrappers::giveFrameBufferSemaphoreFromISR()
  */
 void OSWrappers::signalVSync()
 {
-    osMessageQueuePut(vsync_queue, &dummy, 0, 0);
+    UINT ret;
+
+    // Send the message only if the queue is empty.
+    // This call is from ISR, so no need to re-send
+    // the message if not yet consumed by threads
+    if (vsync_q.tx_queue_enqueued == 0)
+    {
+        // This is supposed to be called from Vsync Interrupt Handler
+        // So wait_option should be equal to TX_NO_WAIT
+        ret = tx_queue_send(&vsync_q, &dummy_msg, TX_NO_WAIT);
+        if (ret != TX_SUCCESS)
+        {
+            assert(0 && "Failed to Signal Vsync!");
+        }
+    }
 }
 
 /*
@@ -101,7 +175,7 @@ void OSWrappers::signalVSync()
   */
 void OSWrappers::signalRenderingDone()
 {
-    // Empty implementation for CMSIS V2
+
 }
 
 /*
@@ -112,12 +186,21 @@ void OSWrappers::signalRenderingDone()
  */
 void OSWrappers::waitForVSync()
 {
-    uint32_t dummyGet;
-    // First make sure the queue is empty, by trying to remove an element with 0 timeout.
-    osMessageQueueGet(vsync_queue, &dummyGet, 0, 0);
+    UINT ret;
 
-    // Then, wait for next VSYNC to occur.
-    osMessageQueueGet(vsync_queue, &dummyGet, 0, osWaitForever);
+    // First make sure the queue is empty, by trying to remove an element with 0 timeout.
+    ret = tx_queue_receive(&vsync_q, &dummy_msg, TX_NO_WAIT);
+
+    if ((ret == TX_SUCCESS) || (ret == TX_QUEUE_EMPTY))
+    {
+        // Then, wait for next VSYNC to occur.
+        ret = tx_queue_receive(&vsync_q, &dummy_msg, TX_WAIT_FOREVER);
+    }
+
+    if (ret != TX_SUCCESS)
+    {
+        assert(0 && "Failed to Wait for Vsync!");
+    }
 }
 
 /*
@@ -135,7 +218,7 @@ void OSWrappers::waitForVSync()
  */
 void OSWrappers::taskDelay(uint16_t ms)
 {
-    osDelay(static_cast<uint32_t>(ms));
+    tx_thread_sleep(ms);
 }
 
 /**
@@ -150,7 +233,13 @@ void OSWrappers::taskDelay(uint16_t ms)
  */
 void OSWrappers::taskYield()
 {
-    osThreadYield();
+    /* Check if this API is called from Interrupt Service Routines */
+    if (__get_IPSR() == 0U)
+    {
+        /* Call the tx_thread_relinquish to relinquishes processor control to
+           other ready-to-run threads at the same or higher priority. */
+        tx_thread_relinquish();
+    }
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

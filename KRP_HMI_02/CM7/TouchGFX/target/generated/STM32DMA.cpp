@@ -53,9 +53,9 @@ extern "C" {
 }
 
 STM32DMA::STM32DMA()
-    : DMA_Interface(dma_queue), dma_queue(queue_storage, sizeof(queue_storage) / sizeof(queue_storage[0])), started_by_external_job(false), mutexIsRunning(0)
+    : DMA_Interface(dma_queue), dma_queue(queue_storage, sizeof(queue_storage) / sizeof(queue_storage[0])), started_by_external_job(false)
 {
-    mutexIsRunning = MUTEX_CREATE();
+
 }
 
 STM32DMA::~STM32DMA()

@@ -23,16 +23,14 @@
 #include <touchgfx/widgets/canvas/CWRVectorRenderer.hpp>
 
 #include <HardwareMJPEGDecoder.hpp>
-#include <DedicatedBufferVideoController.hpp>
+#include <DirectFrameBufferVideoController.hpp>
 #include <stm32h7xx_hal.h>
 
 HardwareMJPEGDecoder mjpegdecoder1;
 
 namespace
 {
-LOCATION_PRAGMA_NOLOAD("Video_RGB_Buffer")
-uint32_t videoRGBBuffer[288000] LOCATION_ATTRIBUTE_NOLOAD("Video_RGB_Buffer");
-DedicatedBufferController<1, 800, 480, 800 * 3U, Bitmap::RGB888> videoController;
+DirectFrameBufferVideoController<1, Bitmap::RGB888> videoController;
 }
 
 //Singleton Factory
@@ -77,7 +75,6 @@ void TouchGFXGeneratedHAL::initialize()
      * Add hardware decoder to video controller
      */
     videoController.addDecoder(mjpegdecoder1, 0);
-    videoController.setRGBBuffer((uint8_t*)videoRGBBuffer, sizeof(videoRGBBuffer));
 }
 
 void TouchGFXGeneratedHAL::configureInterrupts()
@@ -107,8 +104,6 @@ bool TouchGFXGeneratedHAL::beginFrame()
 void TouchGFXGeneratedHAL::endFrame()
 {
     HAL::endFrame();
-    videoController.endFrame();
-    dma.start();
 }
 
 inline uint8_t* TouchGFXGeneratedHAL::advanceFrameBufferToRect(uint8_t* fbPtr, const touchgfx::Rect& rect) const
@@ -162,11 +157,6 @@ void TouchGFXGeneratedHAL::FlushCache()
     {
         SCB_CleanInvalidateDCache();
     }
-}
-
-extern "C" void videoTaskFunc(void* argument)
-{
-    videoController.decoderTaskEntry();
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
