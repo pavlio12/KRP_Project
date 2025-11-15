@@ -102,6 +102,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     PB1     ------> USB_OTG_HS_ULPI_D2
     PB12     ------> USB_OTG_HS_ULPI_D5
     PA3     ------> USB_OTG_HS_ULPI_D0
+    PA4     ------> USB_OTG_HS_SOF
     PB0     ------> USB_OTG_HS_ULPI_D1
     PB13     ------> USB_OTG_HS_ULPI_D6
     */
@@ -141,6 +142,13 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF12_OTG2_FS;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
     /* Peripheral clock enable */
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
@@ -176,6 +184,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
     PB1     ------> USB_OTG_HS_ULPI_D2
     PB12     ------> USB_OTG_HS_ULPI_D5
     PA3     ------> USB_OTG_HS_ULPI_D0
+    PA4     ------> USB_OTG_HS_SOF
     PB0     ------> USB_OTG_HS_ULPI_D1
     PB13     ------> USB_OTG_HS_ULPI_D6
     */
@@ -188,7 +197,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 
     HAL_GPIO_DeInit(GPIOH, GPIO_PIN_4);
 
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_3);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_3|GPIO_PIN_4);
 
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(OTG_HS_IRQn);
@@ -412,7 +421,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   hpcd_USB_OTG_HS.Init.speed = PCD_SPEED_HIGH;
   hpcd_USB_OTG_HS.Init.dma_enable = DISABLE;
   hpcd_USB_OTG_HS.Init.phy_itface = USB_OTG_ULPI_PHY;
-  hpcd_USB_OTG_HS.Init.Sof_enable = DISABLE;
+  hpcd_USB_OTG_HS.Init.Sof_enable = ENABLE;
   hpcd_USB_OTG_HS.Init.low_power_enable = DISABLE;
   hpcd_USB_OTG_HS.Init.lpm_enable = DISABLE;
   hpcd_USB_OTG_HS.Init.vbus_sensing_enable = DISABLE;

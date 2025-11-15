@@ -20,10 +20,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
-#include "usb_fsm.h"
 
 /* USER CODE BEGIN INCLUDE */
-// #include "usb_task.h"
+#include "usb_task.h"
+#include "usb_fsm.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
