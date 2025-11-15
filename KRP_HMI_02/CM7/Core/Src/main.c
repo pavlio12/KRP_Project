@@ -110,6 +110,13 @@ void LED_Task(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef enum {
+    USB_MODE_DEVICE = 0,
+    USB_MODE_HOST = 1
+} USB_ModeTypeDef;
+
+volatile USB_ModeTypeDef g_usb_mode = USB_MODE_DEVICE;
+volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
 
 /* USER CODE END 0 */
 
