@@ -111,13 +111,22 @@ void LED_Task(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 typedef enum {
-    USB_MODE_DEVICE = 0,
-    USB_MODE_HOST = 1
-} USB_ModeTypeDef;
+    DRD_ROLE_DEVICE = 0,
+    DRD_ROLE_HOST   = 1
+} DRD_RoleTypeDef;
 
-volatile USB_ModeTypeDef g_usb_mode = USB_MODE_DEVICE;
+volatile DRD_RoleTypeDef g_usb_role;
 volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
+// volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
 
+// Interrupt Callback overwritting function from stm32h7xx_hal_gpio.c
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == USER_BUTTON_Pin)
+    {
+        g_role_switch_requested = 1;
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -862,9 +871,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : USER_BUTTON_Pin */
   GPIO_InitStruct.Pin = USER_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(USER_BUTTON_EXTI_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(USER_BUTTON_EXTI_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   HAL_GPIO_WritePin(GPIOI, LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin, GPIO_PIN_SET);

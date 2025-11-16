@@ -80,6 +80,7 @@ extern int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 #define FRAME_RATE_GPIO_Port GPIOJ
 #define USER_BUTTON_Pin GPIO_PIN_0
 #define USER_BUTTON_GPIO_Port GPIOA
+#define USER_BUTTON_EXTI_IRQn EXTI0_IRQn
 #define RENDER_TIME_Pin GPIO_PIN_8
 #define RENDER_TIME_GPIO_Port GPIOJ
 #define LED4_Pin GPIO_PIN_15
