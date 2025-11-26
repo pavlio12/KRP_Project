@@ -11,7 +11,9 @@
 #include "usbd_cdc_if.h"
 
 #include "usb_device.h"
+#include "usbd_core.h"
 #include "usb_host.h"
+#include "usbh_core.h"
 
 #include "hmiBridge.h"
 #include "cmsis_os.h"
@@ -42,25 +44,31 @@ void USB_Task(void *argument)
 // Start USB Dual-Role-Device Task
 void USB_DRD_Task(void *argument)
 {
-    // start in Device
-    // MX_USB_Device_Init();
+    // Start in Device mode
+    MX_USB_DEVICE_Init();
     g_usb_role = DRD_ROLE_DEVICE;
 
     for (;;)
     {
+        // Role change requested by button IRQ
         if (g_role_switch_requested)
         {
             g_role_switch_requested = 0;
 
             if (g_usb_role == DRD_ROLE_DEVICE)
+            {
                 DRD_SwitchToHost();
+            }
             else
+            {
                 DRD_SwitchToDevice();
+            }
         }
 
+        // When we are host, we must pump the host state machine
         if (g_usb_role == DRD_ROLE_HOST)
         {
-            // USBH_Process(&hUsbHostHS);
+            USBH_Process(&hUsbHostHS);
         }
 
         osDelay(10);
@@ -69,30 +77,30 @@ void USB_DRD_Task(void *argument)
 
 void DRD_SwitchToHost(void)
 {
-    // 1) Stop & deinit USBD (PCD ownership)
+    // 1) Stop & deinit USBD (PCD owns the core in device mode)
     USBD_Stop(&hUsbDeviceHS);
     USBD_DeInit(&hUsbDeviceHS);
 
     // 2) Short settle time so PHY/bus go idle
     osDelay(100);
 
-    // 3) Init host stack (HCD ownership)
-    // MX_USB_Host_Init();
+    // 3) Init host stack (HCD takes ownership)
+    MX_USB_HOST_Init();
 
     g_usb_role = DRD_ROLE_HOST;
 }
 
 void DRD_SwitchToDevice(void)
 {
-    // 1) Stop & deinit USBH (HCD ownership)
-    // USBH_Stop(&hUsbHostHS);
-    // USBH_DeInit(&hUsbHostHS);
+    // 1) Stop & deinit USBH (HCD owns the core in host mode)
+    USBH_Stop(&hUsbHostHS);
+    USBH_DeInit(&hUsbHostHS);
 
     // 2) Short settle time
     osDelay(100);
 
-    // 3) Init device stack (PCD ownership)
-    // MX_USB_Device_Init();
+    // 3) Init device stack again
+    MX_USB_DEVICE_Init();
 
     g_usb_role = DRD_ROLE_DEVICE;
 }
