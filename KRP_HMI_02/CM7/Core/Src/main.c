@@ -110,13 +110,8 @@ void LED_Task(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-typedef enum {
-    DRD_ROLE_DEVICE = 0,
-    DRD_ROLE_HOST   = 1
-} DRD_RoleTypeDef;
-
-volatile DRD_RoleTypeDef g_usb_role;
-volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
+extern volatile DRD_RoleTypeDef g_usb_role;
+extern volatile uint8_t g_role_switch_requested;// Set by button IRQ
 // volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
 
 // Interrupt Callback overwritting function from stm32h7xx_hal_gpio.c
@@ -250,6 +245,15 @@ Error_Handler();
     .stack_size = 128 * 4
   };
   ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
+
+  // USB Dual-Role-Device manager
+	osThreadId_t usbDrdTaskHandle;
+	const osThreadAttr_t usbDrdTask_attributes = {
+		.name = "usbDrdTask",
+		.priority = osPriorityNormal,
+		.stack_size = 256 * 4
+	};
+	usbDrdTaskHandle = osThreadNew(USB_DRD_Task, NULL, &usbDrdTask_attributes);
 
   // USB
   osThreadId_t usbTaskHandle;
@@ -896,36 +900,16 @@ static void MX_GPIO_Init(void)
 			osDelay(250);
 			*/
 			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
-			osDelay(500);
+			if (g_usb_role == DRD_ROLE_DEVICE) {
+				HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin); // Green
+				osDelay(500);
+			}
+			else if (g_usb_role == DRD_ROLE_HOST) {
+				HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin); // Yellow
+				osDelay(250);
+			}
 		}
 	}
-	/*
-	void USB_Task(void *argument)
-	{
-		static uint32_t ModelCounter = 0;
-
-	  // MX_USB_DEVICE_Init() in main() before osKernelStart()
-	  for (;;)
-	  {
-	  	// if (hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED) {
-			uint8_t buffer[] = "STM CDC alive\r\n";
-			uint8_t buffLen = sizeof(buffer);
-
-			if (CDC_Transmit_HS(buffer, buffLen) != USBD_OK) {
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-				osDelay(100);
-				HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-				HMI_addSystemMessage("USB not initialized");
-			}
-			else {
-				HMI_addSystemMessage("USB initialized");
-				//HMI_addSystemMessage("USB enumerated");
-			}
-
-			osDelay(1000);
-	  }
-	}
-	*/
 
 /* USER CODE END 4 */
 

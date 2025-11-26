@@ -10,12 +10,21 @@
 #include "usb_fsm.h"
 #include "usbd_cdc_if.h"
 
+#include "usb_device.h"
+#include "usb_host.h"
+
 #include "hmiBridge.h"
 #include "cmsis_os.h"
 #include "main.h"
 
+volatile DRD_RoleTypeDef g_usb_role;
+volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
+// volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
+
 extern USB_FSM g_usb;
 extern USBD_HandleTypeDef hUsbDeviceHS;
+extern USBH_HandleTypeDef hUsbHostHS;
+
 
 void USB_Task(void *argument)
 {
@@ -29,6 +38,64 @@ void USB_Task(void *argument)
 		}
 }
 
+
+// Start USB Dual-Role-Device Task
+void USB_DRD_Task(void *argument)
+{
+    // start in Device
+    // MX_USB_Device_Init();
+    g_usb_role = DRD_ROLE_DEVICE;
+
+    for (;;)
+    {
+        if (g_role_switch_requested)
+        {
+            g_role_switch_requested = 0;
+
+            if (g_usb_role == DRD_ROLE_DEVICE)
+                DRD_SwitchToHost();
+            else
+                DRD_SwitchToDevice();
+        }
+
+        if (g_usb_role == DRD_ROLE_HOST)
+        {
+            // USBH_Process(&hUsbHostHS);
+        }
+
+        osDelay(10);
+    }
+}
+
+void DRD_SwitchToHost(void)
+{
+    // 1) Stop & deinit USBD (PCD ownership)
+    USBD_Stop(&hUsbDeviceHS);
+    USBD_DeInit(&hUsbDeviceHS);
+
+    // 2) Short settle time so PHY/bus go idle
+    osDelay(100);
+
+    // 3) Init host stack (HCD ownership)
+    // MX_USB_Host_Init();
+
+    g_usb_role = DRD_ROLE_HOST;
+}
+
+void DRD_SwitchToDevice(void)
+{
+    // 1) Stop & deinit USBH (HCD ownership)
+    // USBH_Stop(&hUsbHostHS);
+    // USBH_DeInit(&hUsbHostHS);
+
+    // 2) Short settle time
+    osDelay(100);
+
+    // 3) Init device stack (PCD ownership)
+    // MX_USB_Device_Init();
+
+    g_usb_role = DRD_ROLE_DEVICE;
+}
 
 
 void display_USB_state(bool force_update) {

@@ -8,6 +8,7 @@
 #include "usb_fsm.h"
 #include "usbd_cdc_if.h"
 
+
 USB_FSM g_usb = { .state = USB_LS_INIT,
 									.prev = USB_LS_INIT,
 									.last_hb_tick = 0,

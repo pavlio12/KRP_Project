@@ -32,9 +32,19 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Middlewares/STM32_USB_Host_Library</name>
+			<type>2</type>
+			<location>C:/Users/oopav/KRP/KRP_HMI_02/Middlewares/ST/STM32_USB_Host_Library</location>
+		</link>
+		<link>
 			<name>Utilities/jpeg_utils.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Utilities/JPEG/jpeg_utils.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/USB_HOST</name>
+			<type>2</type>
+			<location>C:/Users/oopav/KRP/KRP_HMI_02/CM7/USB_HOST</location>
 		</link>
 		<link>
 			<name>Drivers/CMSIS/system_stm32h7xx_dualcore_boot_cm4_cm7.c</name>
