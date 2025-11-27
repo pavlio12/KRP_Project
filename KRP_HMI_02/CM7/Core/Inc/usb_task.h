@@ -21,10 +21,15 @@
 #include "stm32h7xx.h"   // for TAMP, PWR, etc.
 
 /* Use backup registers instead of backup SRAM */
-#define DRD_MAGIC_VALUE      0xD00DCAFEUL
-
+#define DRD_MAGIC_VALUE      0xA5A55A5AUL
 #define DRD_MAGIC_REG        (RTC->BKP0R)   // 32-bit backup register 0
 #define DRD_MODE_REG         (RTC->BKP1R)   // 32-bit backup register 1
+
+// Selectable IRQ handler for OTG HS
+extern void (*USBHS_IRQHandler_Func)(void);
+void USBHS_IRQHandler_HOST(void);
+void USBHS_IRQHandler_DEVICE(void);
+
 
 typedef enum {
     DRD_MODE_DEVICE = 0,
@@ -32,12 +37,14 @@ typedef enum {
 } DRD_Mode_t;
 
 extern volatile DRD_Mode_t g_usb_role;
+extern volatile uint8_t g_role_switch_requested;   // Set by button IRQ
 
 extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
 extern HCD_HandleTypeDef hhcd_USB_OTG_HS;
 
-extern DRD_Mode_t DRD_ReadBootMode(void);
-extern void DRD_RequestModeSwitch(void);
+DRD_Mode_t DRD_ReadBootMode(void);
+void DRD_RequestModeSwitch(void);
+void DRD_BackupDomainInit(void);
 
 
 void USB_Task(void *argument);

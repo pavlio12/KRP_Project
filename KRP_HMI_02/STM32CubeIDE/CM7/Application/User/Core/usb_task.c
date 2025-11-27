@@ -21,10 +21,24 @@ volatile DRD_Mode_t g_usb_role;
 volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
 // volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
 
+// Function pointer used by OTG_HS_IRQHandler
+void (*USBHS_IRQHandler_Func)(void) = 0;
+
 extern USB_FSM g_usb;
 extern USBD_HandleTypeDef hUsbDeviceHS;
 extern USBH_HandleTypeDef hUsbHostHS;
 
+void USBHS_IRQHandler_HOST(void)
+{
+    HAL_HCD_IRQHandler(&hhcd_USB_OTG_HS);
+}
+
+void USBHS_IRQHandler_DEVICE(void)
+{
+    HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+}
+
+/*
 static void DRD_BackupDomainInit(void)
 {
 	// On H7 there is no __HAL_RCC_PWR_CLK_ENABLE macro; PWR is already accessible.
@@ -32,7 +46,7 @@ static void DRD_BackupDomainInit(void)
 
 	HAL_PWR_EnableBkUpAccess();        // unlock backup-domain writes
 
-}
+}*/
 
 
 void USB_Task(void *argument)
@@ -45,41 +59,57 @@ void USB_Task(void *argument)
 				usb_eval_transitions(); // Compute transitions + Update HMI screen
 				osDelay(10);            // 100 Hz update rate;
 		}*/
-		osDelay(10);
+		for (;;) {
+			osDelay(10);
+		}
 }
 
 
 // USB Dual-Role-Device Task
 void USB_DRD_Task(void *argument)
 {
-		/*
 		DRD_BackupDomainInit();
-		// osDelay(5);
-    DRD_Mode_t boot_mode = DRD_ReadBootMode();
+		DRD_Mode_t boot_mode = DRD_ReadBootMode();
 
-    if (boot_mode == DRD_MODE_HOST)
-    {
-        HMI_addSystemMessage("Booting in USB Host mode");
-        MX_USB_HOST_Init();
-        g_usb_role = DRD_MODE_HOST;
-    }
-    else
-    {
-        HMI_addSystemMessage("Booting in USB Device mode");
-        MX_USB_DEVICE_Init();
-        g_usb_role = DRD_MODE_DEVICE;
-    }*/
+		if (boot_mode == DRD_MODE_HOST)
+		{
+				HMI_addSystemMessage("Booting in USB Host mode");
 
-		/*//A) Force HOST
+				// 1) tell IRQ which handler to use
+				USBHS_IRQHandler_Func = USBHS_IRQHandler_HOST;
+				g_usb_role = DRD_MODE_HOST;
+
+				// 2) then init host stack (enables IRQ)
+				MX_USB_HOST_Init();
+		}
+		else
+		{
+				HMI_addSystemMessage("Booting in USB Device mode");
+
+				// 1) tell IRQ which handler to use
+				USBHS_IRQHandler_Func = USBHS_IRQHandler_DEVICE;
+				g_usb_role = DRD_MODE_DEVICE;
+
+				// 2) then init device stack (enables IRQ)
+				MX_USB_DEVICE_Init();
+		}
+
+		//A) Force HOST
+		/*
+		USBHS_IRQHandler_Func = USBHS_IRQHandler_HOST;
+		g_usb_role = DRD_MODE_HOST;
+
 		HMI_addSystemMessage("Force booting in Host mode");
 		MX_USB_HOST_Init();
-		g_usb_role = DRD_MODE_HOST;
 		*/
 
 		// B) Force DEVICE
+		/*
 		HMI_addSystemMessage("Force Booting in Device mode");
 		MX_USB_DEVICE_Init();
 		g_usb_role = DRD_MODE_DEVICE;
+		*/
+
 
     for (;;)
     {
@@ -102,18 +132,15 @@ void USB_DRD_Task(void *argument)
 void DRD_RequestModeSwitch(void)
 {
     DRD_Mode_t current = DRD_ReadBootMode();
-    DRD_Mode_t next    = (current == DRD_MODE_DEVICE) ? DRD_MODE_HOST
-                                                      : DRD_MODE_DEVICE;
+    DRD_Mode_t next = (current == DRD_MODE_DEVICE) ? DRD_MODE_HOST : DRD_MODE_DEVICE;
 
-    DRD_MODE_REG  = (uint32_t)next;
+    // Write next mode
+    DRD_MODE_REG = (uint32_t)next;
     DRD_MAGIC_REG = DRD_MAGIC_VALUE;
 
-
-    DRD_Mode_t written = DRD_ReadBootMode();
-		if (written != next) {
-			HMI_addSystemMessage("Wrong SRAM write!");
-			return;
-		}
+    // Ensure write completed
+    __DSB();
+    __ISB();
 
     __disable_irq();
     HAL_NVIC_SystemReset();
@@ -121,15 +148,42 @@ void DRD_RequestModeSwitch(void)
 
 
 
+
 DRD_Mode_t DRD_ReadBootMode(void)
 {
+    // If no magic → default to DEVICE
     if (DRD_MAGIC_REG != DRD_MAGIC_VALUE)
     {
-        // First boot after power-on ⇒ default to DEVICE
+        DRD_MODE_REG = DRD_MODE_DEVICE;
+        DRD_MAGIC_REG = DRD_MAGIC_VALUE;
         return DRD_MODE_DEVICE;
     }
-    return (DRD_Mode_t)(DRD_MODE_REG & 0x1u);
+
+    uint32_t mode = DRD_MODE_REG;
+
+    if (mode == DRD_MODE_HOST)
+        return DRD_MODE_HOST;
+
+    // Default fallback
+    return DRD_MODE_DEVICE;
 }
+
+
+void DRD_BackupDomainInit(void)
+{
+    // Enable access to backup registers
+   //  __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWR_EnableBkUpAccess();
+
+    // Enable RTC APB clock (required for BKPxR access)
+    // __HAL_RCC_RTCAPB_CLK_ENABLE();
+
+    // Enable LSI so RTC domain is stable (LSE unnecessary)
+    __HAL_RCC_LSI_ENABLE();
+    while (!__HAL_RCC_GET_FLAG(RCC_FLAG_LSIRDY))
+        ;
+}
+
 
 
 

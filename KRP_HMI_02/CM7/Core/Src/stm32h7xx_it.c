@@ -197,14 +197,30 @@ void TIM6_DAC_IRQHandler(void)
 void OTG_HS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_HS_IRQn 0 */
-	if (g_usb_role == DRD_MODE_HOST)
+	if (USBHS_IRQHandler_Func)
 	{
+			USBHS_IRQHandler_Func();
+	}
+
+	/*
+	switch (g_usb_role)
+	{
+	case DRD_MODE_HOST:
 			HAL_HCD_IRQHandler(&hhcd_USB_OTG_HS);
-	}
-	else
-	{
+			break;
+
+	case DRD_MODE_DEVICE:
 			HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+			break;
+
+	default:
+			// Nothing. Not yet decided if we are USB Host or Device
+			// In theory no USB IRQs should be enabled when NONE.
+			// For safety, you can optionally clear spurious flags here,
+			// but in a correct design we shouldn't get interrupts in this state.
+			break;
 	}
+	*/
   /* USER CODE END OTG_HS_IRQn 0 */
   // HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
   /* USER CODE BEGIN OTG_HS_IRQn 1 */

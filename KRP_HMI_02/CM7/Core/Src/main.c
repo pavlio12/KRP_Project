@@ -115,7 +115,6 @@ void LED_Task(void *argument);
 static void DRD_BackupInit(void)
 {
     /* On STM32H747, PWR clock is always enabled, so no RCC macro needed */
-
     /* Enable access to backup domain */
     HAL_PWR_EnableBkUpAccess();
 
@@ -147,10 +146,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
+
 /* USER CODE END Boot_Mode_Sequence_0 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -174,13 +173,16 @@ int main(void)
   }
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
-
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET); // Green
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET); // Yellow
 
   /* USER CODE BEGIN Init */
   // DRD: enable backup SRAM so we can store next USB role across reset
   // DRD_BackupInit();
+  DRD_BackupDomainInit();
+  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); // Red
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -223,6 +225,15 @@ Error_Handler();
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
   // MX_USB_DEVICE_Init();     // DRD task decides the role
+  HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET); // Blue
+
+  // Turn all LEDs off
+  /*
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET); // Green
+  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET); // Yellow
+  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); // Red
+  HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET); // Blue
+  */
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -272,20 +283,24 @@ Error_Handler();
 	usbDrdTaskHandle = osThreadNew(USB_DRD_Task, NULL, &usbDrdTask_attributes);
 
   // USB
+	/*
   osThreadId_t usbTaskHandle;
   const osThreadAttr_t usbTask_attributes = {
     .name = "usbTask",
     .priority = osPriorityNormal,
     .stack_size = 256 * 4
   };
-  usbTaskHandle = osThreadNew(USB_Task, NULL, &usbTask_attributes);
+  usbTaskHandle = osThreadNew(USB_Task, NULL, &usbTask_attributes);*/
 
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET); // Blue
+	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET); // Blue
+	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); // Blue
+	HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET); // Blue
   /* Start scheduler */
   osKernelStart();
 
@@ -940,7 +955,7 @@ static void MX_GPIO_Init(void)
 __weak void TouchGFX_Task(void *argument)
 {
   /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
+  // MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
@@ -1054,6 +1069,8 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+  	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin); // Red
+  	HAL_Delay(50);
   }
   /* USER CODE END Error_Handler_Debug */
 }
