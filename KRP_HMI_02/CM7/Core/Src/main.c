@@ -28,6 +28,7 @@
 #include "hmiBridge.h"
 #include "usbd_cdc_if.h"
 #include "usb_task.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,7 +111,21 @@ void LED_Task(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-extern volatile DRD_RoleTypeDef g_usb_role;
+
+static void DRD_BackupInit(void)
+{
+    /* On STM32H747, PWR clock is always enabled, so no RCC macro needed */
+
+    /* Enable access to backup domain */
+    HAL_PWR_EnableBkUpAccess();
+
+    /* Enable backup regulator (required for BKPSRAM retention during reset) */
+    HAL_PWREx_EnableBkUpReg();
+
+    /* Nothing else needed — BKPSRAM is always clocked on H747 */
+}
+
+extern volatile DRD_Mode_t g_usb_role;
 extern volatile uint8_t g_role_switch_requested;// Set by button IRQ
 // volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
 
@@ -164,7 +179,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  // DRD: enable backup SRAM so we can store next USB role across reset
+  // DRD_BackupInit();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -206,7 +222,7 @@ Error_Handler();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-  MX_USB_DEVICE_Init();     // Init USB device stack
+  // MX_USB_DEVICE_Init();     // DRD task decides the role
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -901,11 +917,11 @@ static void MX_GPIO_Init(void)
 			*/
 			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
 
-			if (g_usb_role == DRD_ROLE_DEVICE) {
+			if (g_usb_role == DRD_MODE_DEVICE) {
 				HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin); // Green
 				osDelay(250);
 			}
-			else if (g_usb_role == DRD_ROLE_HOST) {
+			else if (g_usb_role == DRD_MODE_HOST) {
 				HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin); // Yellow
 				osDelay(250);
 			}

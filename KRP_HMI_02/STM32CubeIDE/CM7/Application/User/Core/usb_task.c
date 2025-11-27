@@ -4,8 +4,6 @@
  *  Created on: Oct 28, 2025
  *      Author: Ondrej Pavlin
  */
-
-
 #include "usb_task.h"
 #include "usb_fsm.h"
 #include "usbd_cdc_if.h"
@@ -19,7 +17,7 @@
 #include "cmsis_os.h"
 #include "main.h"
 
-volatile DRD_RoleTypeDef g_usb_role;
+volatile DRD_Mode_t g_usb_role;
 volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
 // volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
 
@@ -27,46 +25,72 @@ extern USB_FSM g_usb;
 extern USBD_HandleTypeDef hUsbDeviceHS;
 extern USBH_HandleTypeDef hUsbHostHS;
 
+static void DRD_BackupDomainInit(void)
+{
+	// On H7 there is no __HAL_RCC_PWR_CLK_ENABLE macro; PWR is already accessible.
+	// Just unlock backup domain and enable RTC APB clock.
+
+	HAL_PWR_EnableBkUpAccess();        // unlock backup-domain writes
+
+}
+
 
 void USB_Task(void *argument)
 {
-		g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
+		/*g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
 		for (;;) {
 				usb_do_actions();       // Do current-state actions
 				usb_eval_transitions(); // Compute transitions + Update HMI screen
 				osDelay(10);            // 100 Hz update rate;
-		}
+		}*/
+		osDelay(10);
 }
 
 
-// Start USB Dual-Role-Device Task
+// USB Dual-Role-Device Task
 void USB_DRD_Task(void *argument)
 {
-    // Start in Device mode
-    MX_USB_DEVICE_Init();
-    g_usb_role = DRD_ROLE_DEVICE;
+		/*
+		DRD_BackupDomainInit();
+		// osDelay(5);
+    DRD_Mode_t boot_mode = DRD_ReadBootMode();
+
+    if (boot_mode == DRD_MODE_HOST)
+    {
+        HMI_addSystemMessage("Booting in USB Host mode");
+        MX_USB_HOST_Init();
+        g_usb_role = DRD_MODE_HOST;
+    }
+    else
+    {
+        HMI_addSystemMessage("Booting in USB Device mode");
+        MX_USB_DEVICE_Init();
+        g_usb_role = DRD_MODE_DEVICE;
+    }*/
+
+		/*//A) Force HOST
+		HMI_addSystemMessage("Force booting in Host mode");
+		MX_USB_HOST_Init();
+		g_usb_role = DRD_MODE_HOST;
+		*/
+
+		// B) Force DEVICE
+		HMI_addSystemMessage("Force Booting in Device mode");
+		MX_USB_DEVICE_Init();
+		g_usb_role = DRD_MODE_DEVICE;
 
     for (;;)
     {
-        // Role change requested by button IRQ
         if (g_role_switch_requested)
         {
             g_role_switch_requested = 0;
-
-            if (g_usb_role == DRD_ROLE_DEVICE)
-            {
-                DRD_SwitchToHost();
-            }
-            else
-            {
-                DRD_SwitchToDevice();
-            }
+            HMI_addSystemMessage("DRD: requesting role switch, system reset...");
+            DRD_RequestModeSwitch();   // SHOULD NEVER RETURN
         }
 
-        // When we are host, we must pump the host state machine
-        if (g_usb_role == DRD_ROLE_HOST)
+        if (g_usb_role == DRD_MODE_HOST)
         {
             USBH_Process(&hUsbHostHS);
         }
@@ -75,48 +99,36 @@ void USB_DRD_Task(void *argument)
     }
 }
 
-void DRD_SwitchToHost(void)
+void DRD_RequestModeSwitch(void)
 {
-		HMI_addSystemMessage("Switching to USB Host...");
-    // 1) Stop & deinit USBD (PCD owns the core in device mode)
-    USBD_Stop(&hUsbDeviceHS);
-    USBD_DeInit(&hUsbDeviceHS);
+    DRD_Mode_t current = DRD_ReadBootMode();
+    DRD_Mode_t next    = (current == DRD_MODE_DEVICE) ? DRD_MODE_HOST
+                                                      : DRD_MODE_DEVICE;
 
-    // 2) Short settle time so PHY/bus go idle
-    osDelay(100);
+    DRD_MODE_REG  = (uint32_t)next;
+    DRD_MAGIC_REG = DRD_MAGIC_VALUE;
 
-    // 3) Manually reinitialize USBH_HandleTypeDef
-    Reset_USBH_Handle(&hUsbHostHS);
 
-		osDelay(10);
+    DRD_Mode_t written = DRD_ReadBootMode();
+		if (written != next) {
+			HMI_addSystemMessage("Wrong SRAM write!");
+			return;
+		}
 
-    // 4) Init host stack (HCD takes ownership)
-    MX_USB_HOST_Init();
-
-    g_usb_role = DRD_ROLE_HOST;
-    HMI_addSystemMessage("Switched to USB Host");
+    __disable_irq();
+    HAL_NVIC_SystemReset();
 }
 
-void DRD_SwitchToDevice(void)
+
+
+DRD_Mode_t DRD_ReadBootMode(void)
 {
-		HMI_addSystemMessage("Switching to USB Device...");
-    // 1) Stop & deinit USBH (HCD owns the core in host mode)
-    // USBH_Stop(&hUsbHostHS); Caused runtime errors
-    USBH_DeInit(&hUsbHostHS);
-
-    // 2) Short settle time
-    osDelay(100);
-
-    // 3) Init device stack again
-    MX_USB_DEVICE_Init();
-
-    g_usb_role = DRD_ROLE_DEVICE;
-    HMI_addSystemMessage("Switched to USB Device");
-}
-
-void Reset_USBH_Handle(USBH_HandleTypeDef *phost)
-{
-    memset(phost, 0, sizeof(USBH_HandleTypeDef));
+    if (DRD_MAGIC_REG != DRD_MAGIC_VALUE)
+    {
+        // First boot after power-on ⇒ default to DEVICE
+        return DRD_MODE_DEVICE;
+    }
+    return (DRD_Mode_t)(DRD_MODE_REG & 0x1u);
 }
 
 

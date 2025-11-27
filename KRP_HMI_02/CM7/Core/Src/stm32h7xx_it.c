@@ -197,7 +197,7 @@ void TIM6_DAC_IRQHandler(void)
 void OTG_HS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_HS_IRQn 0 */
-	if (g_usb_role == DRD_ROLE_HOST)
+	if (g_usb_role == DRD_MODE_HOST)
 	{
 			HAL_HCD_IRQHandler(&hhcd_USB_OTG_HS);
 	}
