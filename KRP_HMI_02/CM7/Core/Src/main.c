@@ -900,9 +900,10 @@ static void MX_GPIO_Init(void)
 			osDelay(250);
 			*/
 			HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin); // Blue
+
 			if (g_usb_role == DRD_ROLE_DEVICE) {
 				HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin); // Green
-				osDelay(500);
+				osDelay(250);
 			}
 			else if (g_usb_role == DRD_ROLE_HOST) {
 				HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin); // Yellow

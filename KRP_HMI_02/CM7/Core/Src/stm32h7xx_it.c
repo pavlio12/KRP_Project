@@ -23,6 +23,7 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usb_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -170,15 +171,10 @@ void DebugMon_Handler(void)
 /**
   * @brief This function handles EXTI line0 interrupt.
   */
-void EXTI0_IRQHandler(void)
+
+void EXTI15_10_IRQHandler(void)
 {
-  /* USER CODE BEGIN EXTI0_IRQn 0 */
-
-  /* USER CODE END EXTI0_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_Pin);
-  /* USER CODE BEGIN EXTI0_IRQn 1 */
-
-  /* USER CODE END EXTI0_IRQn 1 */
+    HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_Pin);
 }
 
 /**
@@ -201,9 +197,16 @@ void TIM6_DAC_IRQHandler(void)
 void OTG_HS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_HS_IRQn 0 */
-
+	if (g_usb_role == DRD_ROLE_HOST)
+	{
+			HAL_HCD_IRQHandler(&hhcd_USB_OTG_HS);
+	}
+	else
+	{
+			HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+	}
   /* USER CODE END OTG_HS_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
+  // HAL_PCD_IRQHandler(&hpcd_USB_OTG_HS);
   /* USER CODE BEGIN OTG_HS_IRQn 1 */
 
   /* USER CODE END OTG_HS_IRQn 1 */

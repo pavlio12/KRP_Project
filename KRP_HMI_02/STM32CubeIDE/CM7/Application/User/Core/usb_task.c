@@ -77,6 +77,7 @@ void USB_DRD_Task(void *argument)
 
 void DRD_SwitchToHost(void)
 {
+		HMI_addSystemMessage("Switching to USB Host...");
     // 1) Stop & deinit USBD (PCD owns the core in device mode)
     USBD_Stop(&hUsbDeviceHS);
     USBD_DeInit(&hUsbDeviceHS);
@@ -84,16 +85,23 @@ void DRD_SwitchToHost(void)
     // 2) Short settle time so PHY/bus go idle
     osDelay(100);
 
-    // 3) Init host stack (HCD takes ownership)
+    // 3) Manually reinitialize USBH_HandleTypeDef
+    Reset_USBH_Handle(&hUsbHostHS);
+
+		osDelay(10);
+
+    // 4) Init host stack (HCD takes ownership)
     MX_USB_HOST_Init();
 
     g_usb_role = DRD_ROLE_HOST;
+    HMI_addSystemMessage("Switched to USB Host");
 }
 
 void DRD_SwitchToDevice(void)
 {
+		HMI_addSystemMessage("Switching to USB Device...");
     // 1) Stop & deinit USBH (HCD owns the core in host mode)
-    USBH_Stop(&hUsbHostHS);
+    // USBH_Stop(&hUsbHostHS); Caused runtime errors
     USBH_DeInit(&hUsbHostHS);
 
     // 2) Short settle time
@@ -103,7 +111,14 @@ void DRD_SwitchToDevice(void)
     MX_USB_DEVICE_Init();
 
     g_usb_role = DRD_ROLE_DEVICE;
+    HMI_addSystemMessage("Switched to USB Device");
 }
+
+void Reset_USBH_Handle(USBH_HandleTypeDef *phost)
+{
+    memset(phost, 0, sizeof(USBH_HandleTypeDef));
+}
+
 
 
 void display_USB_state(bool force_update) {
