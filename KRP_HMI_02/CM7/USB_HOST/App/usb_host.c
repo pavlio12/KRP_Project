@@ -176,10 +176,10 @@ void MX_USB_HOST_Init(void)
   /* Init host Library, add supported class and start the library. */
   if (USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS) != USBH_OK)
   {
-  	int errorvalue = 1;
-  	if (errorvalue == 1){
-  		Error_Handler();
-  	}
+			int errorvalue = 1;
+			if (errorvalue == 1){
+				Error_Handler();
+			}
   }
   /* if (USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS) != USBH_OK)
   {
@@ -187,10 +187,10 @@ void MX_USB_HOST_Init(void)
   }*/
   if (USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS) != USBH_OK)
   {
-  	int errorvalue = 2;
-  	if (errorvalue == 2){
-			Error_Handler();
-		}
+			int errorvalue = 2;
+			if (errorvalue == 2){
+				Error_Handler();
+			}
   }
   /*if (USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS) != USBH_OK)
   {
@@ -211,13 +211,13 @@ void MX_USB_HOST_Init(void)
   }*/
   if (USBH_Start(&hUsbHostHS) != USBH_OK)
   {
-  	int errorvalue = 4;
-  	if (errorvalue == 4){
-			Error_Handler();
-		}
+			int errorvalue = 4;
+			if (errorvalue == 4){
+				Error_Handler();
+			}
   }
   /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
-
+  HMI_addSystemMessage("USB Host stack started (HS PHY): registered CDC, MSC, HID");
   /* USER CODE END USB_HOST_Init_PostTreatment */
 }
 

@@ -22,7 +22,7 @@
 #include "usbh_core.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "hmiBridge.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +31,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+static uint8_t last_vbus_state = 0xFF;
 /* USER CODE END PV */
 
 HCD_HandleTypeDef hhcd_USB_OTG_HS;
@@ -518,7 +518,18 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
 {
 
   /* USER CODE BEGIN 0 */
-
+  if (state != last_vbus_state)
+  {
+    last_vbus_state = state;
+    if (state == 0U)
+    {
+      HMI_addSystemMessage("VBUS drive request: OFF (ensure downstream port is unpowered)");
+    }
+    else
+    {
+      HMI_addSystemMessage("VBUS drive request: ON (board must supply 5V to device)");
+    }
+  }
   /* USER CODE END 0*/
 
   if (phost->id == HOST_HS)
@@ -631,3 +642,29 @@ USBH_StatusTypeDef USBH_Get_USB_Status(HAL_StatusTypeDef hal_status)
   return usb_status;
 }
 
+/* USER CODE BEGIN AdditionalCallbacks */
+void HAL_HCD_ConnectCallback(HCD_HandleTypeDef *hhcd)
+{
+  HMI_addSystemMessage("HCD: device detected on root port");
+}
+
+void HAL_HCD_DisconnectCallback(HCD_HandleTypeDef *hhcd)
+{
+  HMI_addSystemMessage("HCD: device removed from root port");
+}
+
+void HAL_HCD_PortEnabledCallback(HCD_HandleTypeDef *hhcd)
+{
+  HMI_addSystemMessage("HCD: port enabled (link up)");
+}
+
+void HAL_HCD_PortDisabledCallback(HCD_HandleTypeDef *hhcd)
+{
+  HMI_addSystemMessage("HCD: port disabled (link down)");
+}
+
+void HAL_HCD_PortResetCallback(HCD_HandleTypeDef *hhcd)
+{
+  HMI_addSystemMessage("HCD: port reset issued");
+}
+/* USER CODE END AdditionalCallbacks */
