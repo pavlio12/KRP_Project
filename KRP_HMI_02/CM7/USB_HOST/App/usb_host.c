@@ -29,7 +29,11 @@
 // #include "usbh_mtp.h"
 
 /* USER CODE BEGIN Includes */
+#include "hmiBridge.h"
+#include "usbh_ctlreq.h"
 
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
@@ -50,7 +54,99 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  * -- Insert your variables declaration here --
  */
 /* USER CODE BEGIN 0 */
+static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed)
+{
+  switch (speed)
+  {
+    case USBH_SPEED_HIGH: return "High-speed";
+    case USBH_SPEED_FULL: return "Full-speed";
+    case USBH_SPEED_LOW:  return "Low-speed";
+    default:              return "Unknown-speed";
+  }
+}
 
+static const char* usb_class_to_str(uint8_t class_code)
+{
+  switch (class_code)
+  {
+    case 0x01: return "Audio";
+    case 0x02: return "Communications";
+    case 0x03: return "HID";
+    case 0x05: return "Physical";
+    case 0x06: return "Image";
+    case 0x07: return "Printer";
+    case 0x08: return "Mass Storage";
+    case 0x09: return "Hub";
+    case 0x0A: return "CDC-Data";
+    case 0x0B: return "Smart Card";
+    case 0x0D: return "Content Security";
+    case 0x0E: return "Video";
+    case 0x0F: return "Personal Healthcare";
+    case 0xDC: return "Diagnostic";
+    case 0xE0: return "Wireless";
+    case 0xEF: return "Misc";
+    case 0xFE: return "Application Specific";
+    case 0xFF: return "Vendor Specific";
+    default:   return "Unknown";
+  }
+}
+
+static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, const char *label)
+{
+  if (index == 0U)
+  {
+    return;
+  }
+
+  uint8_t buffer[64] = {0};
+  if (USBH_Get_StringDesc(phost, index, buffer, sizeof(buffer)) == USBH_OK)
+  {
+    char msg[96];
+    snprintf(msg, sizeof(msg), "%s: %s", label, buffer);
+    HMI_addSystemMessage(msg);
+  }
+  else
+  {
+    char msg[64];
+    snprintf(msg, sizeof(msg), "%s string read failed", label);
+    HMI_addSystemMessage(msg);
+  }
+}
+
+static void log_connected_device_info(USBH_HandleTypeDef *phost)
+{
+  const USBH_DevDescTypeDef *dev = &phost->device.DevDesc;
+  const USBH_CfgDescTypeDef *cfg = &phost->device.CfgDesc;
+
+  char msg[128];
+  snprintf(msg, sizeof(msg), "VID:PID 0x%04X:0x%04X | USB %x.%02x | %s", dev->idVendor,
+           dev->idProduct, (dev->bcdUSB >> 8) & 0xFF, dev->bcdUSB & 0xFF,
+           usb_host_speed_to_str(phost->device.speed));
+  HMI_addSystemMessage(msg);
+
+  snprintf(msg, sizeof(msg), "Device class 0x%02X (%s), subclass 0x%02X, protocol 0x%02X",
+           dev->bDeviceClass, usb_class_to_str(dev->bDeviceClass), dev->bDeviceSubClass,
+           dev->bDeviceProtocol);
+  HMI_addSystemMessage(msg);
+
+  snprintf(msg, sizeof(msg), "Configuration %u: %u interface(s), %u mA max",
+           cfg->bConfigurationValue, cfg->bNumInterfaces,
+           (unsigned int)(cfg->bMaxPower * 2U));
+  HMI_addSystemMessage(msg);
+
+  if (cfg->bNumInterfaces > 0U)
+  {
+    const USBH_InterfaceDescTypeDef *itf = &cfg->Itf_Desc[phost->device.current_interface];
+    snprintf(msg, sizeof(msg), "Interface 0 class 0x%02X (%s), subclass 0x%02X, protocol 0x%02X",
+             itf->bInterfaceClass, usb_class_to_str(itf->bInterfaceClass),
+             itf->bInterfaceSubClass, itf->bInterfaceProtocol);
+    HMI_addSystemMessage(msg);
+  }
+
+  log_string_descriptor(phost, dev->iManufacturer, "Manufacturer");
+  log_string_descriptor(phost, dev->iProduct, "Product");
+  log_string_descriptor(phost, dev->iSerialNumber, "Serial");
+}
 /* USER CODE END 0 */
 
 /*
@@ -62,7 +158,10 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
  * -- Insert your external function declaration here --
  */
 /* USER CODE BEGIN 1 */
-
+static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed);
+static const char* usb_class_to_str(uint8_t class_code);
+static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, const char *label);
+static void log_connected_device_info(USBH_HandleTypeDef *phost);
 /* USER CODE END 1 */
 
 /**
@@ -143,14 +242,18 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 
   case HOST_USER_DISCONNECTION:
   Appli_state = APPLICATION_DISCONNECT;
+  HMI_addSystemMessage("USB device disconnected");
   break;
 
   case HOST_USER_CLASS_ACTIVE:
   Appli_state = APPLICATION_READY;
+  HMI_addSystemMessage("USB device enumerated (class ready)");
+  log_connected_device_info(phost);
   break;
 
   case HOST_USER_CONNECTION:
   Appli_state = APPLICATION_START;
+  HMI_addSystemMessage("USB device connected, enumerating...");
   break;
 
   default:
