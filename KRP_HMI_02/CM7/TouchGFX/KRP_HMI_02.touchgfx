@@ -259,7 +259,9 @@
             },
             "AutoSize": true,
             "Wildcard1": {
-              "TextId": "T_USB_STATE_WILD"
+              "TextId": "T_USB_STATE_WILD",
+              "UseBuffer": true,
+              "BufferSize": 16
             }
           },
           {
@@ -313,7 +315,9 @@
             },
             "AutoSize": true,
             "Wildcard1": {
-              "TextId": "T_USB_ROLE_WILD"
+              "TextId": "T_USB_ROLE_WILD",
+              "UseBuffer": true,
+              "BufferSize": 16
             }
           },
           {

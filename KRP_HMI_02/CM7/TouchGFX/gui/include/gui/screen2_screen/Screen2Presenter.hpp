@@ -19,8 +19,11 @@ public:
      */
     virtual void activate();
 
+    void setUsbRoleText(const char* msg);
+		void setUsbStateText(const char* msg);
 
     void setSystemMessage(const char* msg);
+
 		void appendSystemMessage(const char* msg);
 		void prependSystemMessage(const char* msg);
 

@@ -19,15 +19,26 @@ public:
 
     void tick();
 
-    void addSystemMessage(const char* msg);
+    void setUsbRoleText(const char* msg);
+    void setUsbStateText(const char* msg);
 
+    void addSystemMessage(const char* msg);
     void addUsbStateGraphPoint(uint8_t stateValue);
+
     const uint8_t* getUSBStateHistory() const { return usbHistory; }
 		uint16_t getUSBStateHistorySize() const { return usbHistoryCount; }
 
 
 protected:
     ModelListener* modelListener;
+
+    // USB Role Text
+    bool hasNewUsbRole = false;
+    char pendingUsbRole[16];
+
+    // USB State Text
+		bool hasNewUsbState = false;
+		char pendingUsbState[16];
 
     // System Message TextArea (scrollable)
     bool hasNewMessage = false;

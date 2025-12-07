@@ -21,11 +21,25 @@ void Model::tick()
     modelListener->setSystemMessage(buffer);
     */
 
+		// USB Role Text
+		if (hasNewUsbRole && modelListener) {
+				modelListener->setUsbRoleText(pendingUsbRole); // Add to the beginning of TextArea
+				hasNewUsbRole = false;
+		}
+
+		// USB State Text
+		if (hasNewUsbState && modelListener) {
+				modelListener->setUsbStateText(pendingUsbState); // Add to the beginning of TextArea
+				hasNewUsbState = false;
+		}
+
+		// Log System Messages - Add to the beginning (Prepend instead of Append)
 		if (hasNewMessage && modelListener) {
 				modelListener->prependSystemMessage(pendingMessage); // Add to the beginning of TextArea
 				hasNewMessage = false;
 		}
 
+		// Add the Usb State as a new Point to Graph
 		if (hasNewUsbGraphPoint && modelListener) {
 				modelListener->addUsbStateGraphPoint(pendingUsbGraphPoint);
 				hasNewUsbGraphPoint = false;
@@ -33,16 +47,23 @@ void Model::tick()
 
 }
 
+
+void Model::setUsbRoleText(const char* msg) {
+	strncpy(pendingUsbRole, msg, sizeof(pendingUsbRole) - 1);
+	pendingUsbRole[sizeof(pendingUsbRole) - 1] = '\0';
+	hasNewUsbRole = true;
+}
+
+void Model::setUsbStateText(const char* msg) {
+	strncpy(pendingUsbState, msg, sizeof(pendingUsbState) - 1);
+	pendingUsbState[sizeof(pendingUsbState) - 1] = '\0';
+	hasNewUsbState = true;
+}
+
 void Model::addSystemMessage(const char* msg) {
 	strncpy(pendingMessage, msg, sizeof(pendingMessage) - 1);
 	pendingMessage[sizeof(pendingMessage) - 1] = '\0';
 	hasNewMessage = true;
-
-	/*
-	if (modelListener) {
-		modelListener->setSystemMessage(msg); // - Broken code line!
-	}
-	*/
 }
 
 void Model::addUsbStateGraphPoint(uint8_t stateValue) {

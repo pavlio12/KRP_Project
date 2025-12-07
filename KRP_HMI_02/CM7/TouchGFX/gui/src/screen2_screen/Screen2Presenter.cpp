@@ -17,6 +17,14 @@ void Screen2Presenter::deactivate()
 
 }
 
+void Screen2Presenter::setUsbRoleText(const char* msg) {
+	view.setUsbRoleText(msg);
+}
+
+void Screen2Presenter::setUsbStateText(const char* msg) {
+	view.setUsbStateText(msg);
+}
+
 void Screen2Presenter::setSystemMessage(const char* msg) {
 	view.setSystemMessage(msg);
 }

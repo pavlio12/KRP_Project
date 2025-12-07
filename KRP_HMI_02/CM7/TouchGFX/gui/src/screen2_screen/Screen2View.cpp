@@ -20,6 +20,30 @@ void Screen2View::tearDownScreen()
     Screen2ViewBase::tearDownScreen();
 }
 
+void Screen2View::setUsbRoleText(const char* msg)
+{
+		// TODO: Set the textUsbRole on the Screen2
+		/*
+		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg), ?, ?);
+		textUsbRole.invalidateContent();
+		textUsbRole.setWildcard(?);
+		textUsbRole.resizeToCurrentText();
+		textUsbRole.invalidateContent();
+		*/
+}
+
+void Screen2View::setUsbStateText(const char* msg)
+{
+		// TODO: Set the textUsbState on the Screen2
+		/*
+		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg), ?, ?);
+		textUsbRole.invalidateContent();
+		textUsbRole.setWildcard(?);
+		textUsbRole.resizeToCurrentText();
+		textUsbRole.invalidateContent();
+		*/
+}
+
 
 void Screen2View::setSystemMessage(const char* msg)
 {

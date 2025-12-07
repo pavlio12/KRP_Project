@@ -15,6 +15,10 @@ public:
         model = m;
     }
 
+    virtual void setUsbRoleText(const char* /*msg*/) {}
+
+    virtual void setUsbStateText(const char* /*msg*/) {}
+
     virtual void setSystemMessage(const char* /*msg*/) {}
 
     virtual void appendSystemMessage(const char* /*msg*/) {}

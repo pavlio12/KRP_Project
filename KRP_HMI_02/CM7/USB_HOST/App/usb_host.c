@@ -54,6 +54,9 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  * -- Insert your variables declaration here --
  */
 /* USER CODE BEGIN 0 */
+
+#define USB_ENUM_STALL_TIMEOUT 10000U
+
 static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed)
 {
   switch (speed)
@@ -284,6 +287,7 @@ void MX_USB_HOST_Process(void)
 
   static HOST_StateTypeDef last_host_state = (HOST_StateTypeDef)(-1);
   static ENUM_StateTypeDef last_enum_state = (ENUM_StateTypeDef)(-1);
+  static uint32_t enum_state_enter_ms = 0;
 
   if (hUsbHostHS.gState != last_host_state)
   {
@@ -299,6 +303,30 @@ void MX_USB_HOST_Process(void)
     char msg[64];
     snprintf(msg, sizeof(msg), "Enum state -> %s", usb_enum_state_to_str(last_enum_state));
     HMI_addSystemMessage(msg);
+
+    if (hUsbHostHS.gState == HOST_ENUMERATION)
+    {
+      enum_state_enter_ms = HAL_GetTick();
+    }
+  }
+
+  /* If enumeration stalls too long, force a re-enumeration so re-plugging works reliably */
+  if (hUsbHostHS.gState == HOST_ENUMERATION)
+  {
+    uint32_t now = HAL_GetTick();
+    if (enum_state_enter_ms == 0)
+    {
+      enum_state_enter_ms = now;
+    }
+    if ((now - enum_state_enter_ms) > USB_ENUM_STALL_TIMEOUT)
+    {
+      enum_state_enter_ms = now;
+      char msg[96];
+      snprintf(msg, sizeof(msg), "Enum watchdog: stuck in %s, forcing port reset",
+               usb_enum_state_to_str(hUsbHostHS.EnumState));
+      HMI_addSystemMessage(msg);
+      (void)USBH_ReEnumerate(&hUsbHostHS);
+    }
   }
 }
 /*

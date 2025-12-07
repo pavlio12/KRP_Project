@@ -12,6 +12,12 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
 
+    // USB Role Text
+    virtual void setUsbRoleText(const char* msg);
+
+    // USB State Text
+    virtual void setUsbStateText(const char* msg);
+
     // System Messages TextArea
     virtual void setSystemMessage(const char* msg);     // public setter
     virtual void appendSystemMessage(const char* msg);
