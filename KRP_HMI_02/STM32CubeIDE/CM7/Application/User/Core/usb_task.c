@@ -13,6 +13,10 @@
 #include "usb_host.h"
 #include "usbh_core.h"
 
+// For Macros
+#include "stm32h7xx_hal_rcc.h"
+
+
 #include "hmiBridge.h"
 #include "cmsis_os.h"
 #include "main.h"
