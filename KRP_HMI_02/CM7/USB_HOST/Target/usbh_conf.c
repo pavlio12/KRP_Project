@@ -210,6 +210,7 @@ void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
 {
+  HMI_addSystemMessage("HCD: device detected on root port");
   USBH_LL_Connect(hhcd->pData);
 }
 
@@ -220,6 +221,7 @@ void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd)
 {
+  HMI_addSystemMessage("HCD: device removed from root port");
   USBH_LL_Disconnect(hhcd->pData);
 }
 
@@ -244,6 +246,7 @@ void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t chnum,
   */
 void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd)
 {
+  HMI_addSystemMessage("HCD: port enabled (link up)");
   USBH_LL_PortEnabled(hhcd->pData);
 }
 
@@ -254,6 +257,7 @@ void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_PortDisabled_Callback(HCD_HandleTypeDef *hhcd)
 {
+  HMI_addSystemMessage("HCD: port disabled (link down)");
   USBH_LL_PortDisabled(hhcd->pData);
 }
 

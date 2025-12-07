@@ -147,6 +147,44 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
   log_string_descriptor(phost, dev->iProduct, "Product");
   log_string_descriptor(phost, dev->iSerialNumber, "Serial");
 }
+
+static const char* usb_host_state_to_str(HOST_StateTypeDef state)
+{
+  switch (state)
+  {
+    case HOST_IDLE:                    return "HOST_IDLE";
+    case HOST_DEV_WAIT_FOR_ATTACHMENT: return "HOST_DEV_WAIT_FOR_ATTACHMENT";
+    case HOST_DEV_ATTACHED:            return "HOST_DEV_ATTACHED";
+    case HOST_DEV_DISCONNECTED:        return "HOST_DEV_DISCONNECTED";
+    case HOST_DETECT_DEVICE_SPEED:     return "HOST_DETECT_DEVICE_SPEED";
+    case HOST_ENUMERATION:             return "HOST_ENUMERATION";
+    case HOST_CLASS_REQUEST:           return "HOST_CLASS_REQUEST";
+    case HOST_INPUT:                   return "HOST_INPUT";
+    case HOST_SET_CONFIGURATION:       return "HOST_SET_CONFIGURATION";
+    case HOST_SET_WAKEUP_FEATURE:      return "HOST_SET_WAKEUP_FEATURE";
+    case HOST_CHECK_CLASS:             return "HOST_CHECK_CLASS";
+    case HOST_CLASS:                   return "HOST_CLASS";
+    case HOST_SUSPENDED:               return "HOST_SUSPENDED";
+    case HOST_ABORT_STATE:             return "HOST_ABORT_STATE";
+    default:                           return "HOST_STATE_UNKNOWN";
+  }
+}
+
+static const char* usb_enum_state_to_str(ENUM_StateTypeDef state)
+{
+  switch (state)
+  {
+    case ENUM_IDLE:                     return "ENUM_IDLE";
+    case ENUM_GET_FULL_DEV_DESC:        return "ENUM_GET_FULL_DEV_DESC";
+    case ENUM_SET_ADDR:                 return "ENUM_SET_ADDR";
+    case ENUM_GET_CFG_DESC:             return "ENUM_GET_CFG_DESC";
+    case ENUM_GET_FULL_CFG_DESC:        return "ENUM_GET_FULL_CFG_DESC";
+    case ENUM_GET_MFC_STRING_DESC:      return "ENUM_GET_MFC_STRING_DESC";
+    case ENUM_GET_PRODUCT_STRING_DESC:  return "ENUM_GET_PRODUCT_STRING_DESC";
+    case ENUM_GET_SERIALNUM_STRING_DESC:return "ENUM_GET_SERIALNUM_STRING_DESC";
+    default:                            return "ENUM_STATE_UNKNOWN";
+  }
+}
 /* USER CODE END 0 */
 
 /*
@@ -162,6 +200,8 @@ static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed);
 static const char* usb_class_to_str(uint8_t class_code);
 static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, const char *label);
 static void log_connected_device_info(USBH_HandleTypeDef *phost);
+static const char* usb_host_state_to_str(HOST_StateTypeDef state);
+static const char* usb_enum_state_to_str(ENUM_StateTypeDef state);
 /* USER CODE END 1 */
 
 /**
@@ -228,6 +268,25 @@ void MX_USB_HOST_Process(void)
 {
   /* USB Host Background task */
   USBH_Process(&hUsbHostHS);
+
+  static HOST_StateTypeDef last_host_state = (HOST_StateTypeDef)(-1);
+  static ENUM_StateTypeDef last_enum_state = (ENUM_StateTypeDef)(-1);
+
+  if (hUsbHostHS.gState != last_host_state)
+  {
+    last_host_state = hUsbHostHS.gState;
+    char msg[64];
+    snprintf(msg, sizeof(msg), "USBH state -> %s", usb_host_state_to_str(last_host_state));
+    HMI_addSystemMessage(msg);
+  }
+
+  if (hUsbHostHS.EnumState != last_enum_state)
+  {
+    last_enum_state = hUsbHostHS.EnumState;
+    char msg[64];
+    snprintf(msg, sizeof(msg), "Enum state -> %s", usb_enum_state_to_str(last_enum_state));
+    HMI_addSystemMessage(msg);
+  }
 }
 /*
  * user callback definition

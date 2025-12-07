@@ -146,7 +146,7 @@
             "Name": "boxWithBorder1",
             "X": 31,
             "Y": 105,
-            "Width": 273,
+            "Width": 589,
             "Height": 324,
             "Color": {
               "Red": 39,
@@ -163,10 +163,10 @@
           {
             "Type": "BoxWithBorder",
             "Name": "boxWithBorder2",
-            "X": 330,
-            "Y": 106,
-            "Width": 277,
-            "Height": 49,
+            "X": 641,
+            "Y": 239,
+            "Width": 146,
+            "Height": 93,
             "Color": {
               "Red": 39,
               "Green": 62,
@@ -200,8 +200,8 @@
             "Name": "textFooter",
             "X": 679,
             "Y": 448,
-            "Width": 105,
-            "Height": 17,
+            "Width": 117,
+            "Height": 19,
             "TextId": "__SingleUse_SR56",
             "TextRotation": "0",
             "Color": {
@@ -230,8 +230,8 @@
           {
             "Type": "TextArea",
             "Name": "textLabel2",
-            "X": 341,
-            "Y": 117,
+            "X": 652,
+            "Y": 250,
             "Width": 123,
             "Height": 26,
             "TextId": "__SingleUse_S2VK",
@@ -245,10 +245,10 @@
           },
           {
             "Type": "TextArea",
-            "Name": "textLabel2_1",
-            "X": 486,
-            "Y": 117,
-            "Width": 81,
+            "Name": "textUsbState",
+            "X": 652,
+            "Y": 285,
+            "Width": 71,
             "Height": 26,
             "TextId": "T_USB_STATE",
             "TextRotation": "0",
@@ -263,12 +263,66 @@
             }
           },
           {
+            "Type": "BoxWithBorder",
+            "Name": "boxWithBorder2_1",
+            "X": 641,
+            "Y": 105,
+            "Width": 146,
+            "Height": 95,
+            "Color": {
+              "Red": 39,
+              "Green": 62,
+              "Blue": 78
+            },
+            "BorderColor": {
+              "Red": 72,
+              "Green": 99,
+              "Blue": 115
+            },
+            "BorderSize": 3
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textLabel2_2",
+            "X": 652,
+            "Y": 117,
+            "Width": 111,
+            "Height": 26,
+            "TextId": "__SingleUse_I5PM",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 182,
+              "Green": 222,
+              "Blue": 242
+            },
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textUsbRole",
+            "X": 652,
+            "Y": 152,
+            "Width": 71,
+            "Height": 26,
+            "TextId": "T_USB_ROLE",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 121,
+              "Green": 153,
+              "Blue": 173
+            },
+            "AutoSize": true,
+            "Wildcard1": {
+              "TextId": "T_USB_ROLE_WILD"
+            }
+          },
+          {
             "Type": "ScrollableContainer",
             "Name": "logScroll",
             "X": 40,
-            "Y": 155,
-            "Width": 250,
-            "Height": 250,
+            "Y": 154,
+            "Width": 569,
+            "Height": 262,
             "HorizontalScrollEnabled": true,
             "VerticalScrollEnabled": true,
             "ScrollbarsVisible": true,
@@ -283,7 +337,7 @@
               {
                 "Type": "TextArea",
                 "Name": "textSysMessages",
-                "Width": 81,
+                "Width": 109,
                 "Height": 26,
                 "TextId": "T_SYS_MSG",
                 "TextRotation": "0",
@@ -298,7 +352,7 @@
                   "UseBuffer": true,
                   "BufferSize": 1024
                 },
-                "WideTextAction": 1
+                "WideTextAction": 2
               }
             ]
           },

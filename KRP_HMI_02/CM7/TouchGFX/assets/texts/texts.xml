@@ -6,6 +6,15 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="T_USB_STATE_WILD" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">Text...</Translation>
+      </Text>
+      <Text Id="T_USB_ROLE" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_I5PM" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB Role:</Translation>
+      </Text>
       <Text Id="__SingleUse_3NBW" Alignment="Center" TypographyId="Small">
         <Translation Language="GB">Suspended</Translation>
       </Text>
@@ -33,8 +42,8 @@
       <Text Id="__SingleUse_VBUG" Alignment="Center" TypographyId="Large">
         <Translation Language="GB">USB Graph</Translation>
       </Text>
-      <Text Id="T_USB_STATE_WILD" Alignment="Left" TypographyId="Small">
-        <Translation Language="GB">Text:...</Translation>
+      <Text Id="T_USB_ROLE_WILD" Alignment="Left" TypographyId="Small">
+        <Translation Language="GB">Text...</Translation>
       </Text>
       <Text Id="T_USB_STATE" Alignment="Center" TypographyId="Default">
         <Translation Language="GB">&lt;value&gt;</Translation>
@@ -43,10 +52,10 @@
         <Translation Language="GB">USB State:</Translation>
       </Text>
       <Text Id="T_SYS_MSG_WILD" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">Text:...</Translation>
+        <Translation Language="GB">Text.:-_()</Translation>
       </Text>
       <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
-        <Translation Language="GB">Build 28.10.25</Translation>
+        <Translation Language="GB">Build 07.12.25</Translation>
       </Text>
       <Text Id="T_SYS_MSG" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">&lt;value&gt;</Translation>
