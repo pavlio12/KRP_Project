@@ -222,47 +222,55 @@ void MX_USB_HOST_Init(void)
 			}
   }
 
-  /* if (USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS) != USBH_OK)
+  if (USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS) != USBH_OK)
   {
-    Error_Handler();
-  }*/
+  		int errorvalue = 2;
+			if (errorvalue == 2){
+				Error_Handler();
+			}
+  }
 
   if (USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS) != USBH_OK)
   {
-			int errorvalue = 2;
-			if (errorvalue == 2){
+			int errorvalue = 3;
+			if (errorvalue == 3){
 				Error_Handler();
 			}
   }
 
   if (USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS) != USBH_OK)
   {
-    Error_Handler();
-  }
-
-  /*
-  if (USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS) != USBH_OK)
-  {
-  	int errorvalue = 3;
-  	if (errorvalue == 3){
-			Error_Handler();
-		}
-  }
-  */
-  /*if (USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS) != USBH_OK)
-  {
-    Error_Handler();
-  }*/
-
-  if (USBH_Start(&hUsbHostHS) != USBH_OK)
-  {
 			int errorvalue = 4;
 			if (errorvalue == 4){
 				Error_Handler();
 			}
   }
+
+  if (USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS) != USBH_OK)
+  {
+			int errorvalue = 5;
+			if (errorvalue == 5){
+				Error_Handler();
+			}
+  }
+
+  if (USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS) != USBH_OK)
+  {
+			int errorvalue = 6;
+			if (errorvalue == 6){
+				Error_Handler();
+			}
+  }
+
+  if (USBH_Start(&hUsbHostHS) != USBH_OK)
+  {
+			int errorvalue = 7;
+			if (errorvalue == 7){
+				Error_Handler();
+			}
+  }
   /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
-  HMI_addSystemMessage("USB Host stack started (HS PHY): registered CDC, MSC, HID");
+  HMI_addSystemMessage("USB Host stack started (HS PHY)");
   /* USER CODE END USB_HOST_Init_PostTreatment */
 }
 
