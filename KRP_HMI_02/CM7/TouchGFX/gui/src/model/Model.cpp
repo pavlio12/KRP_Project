@@ -34,10 +34,14 @@ void Model::tick()
 		}
 
 		// Log System Messages - Add to the beginning (Prepend instead of Append)
-		if (hasNewMessage && modelListener) {
-				modelListener->prependSystemMessage(pendingMessage); // Add to the beginning of TextArea
-				hasNewMessage = false;
-		}
+		if (sysMsgCount > 0 && modelListener) {
+        // Pop oldest
+        const char* msg = pendingMessages[sysMsgTail];
+        sysMsgTail = (uint8_t)((sysMsgTail + 1) % SYSMSG_QUEUE_DEPTH);
+        sysMsgCount--;
+
+        modelListener->prependSystemMessage(msg);
+    }
 
 		// Add the Usb State as a new Point to Graph
 		if (hasNewUsbGraphPoint && modelListener) {
@@ -61,9 +65,21 @@ void Model::setUsbStateText(const char* msg) {
 }
 
 void Model::addSystemMessage(const char* msg) {
-	strncpy(pendingMessage, msg, sizeof(pendingMessage) - 1);
-	pendingMessage[sizeof(pendingMessage) - 1] = '\0';
-	hasNewMessage = true;
+	if (!msg) {
+			return;
+	}
+
+	// If queue is full, drop the oldest to keep the most recent messages
+	if (sysMsgCount == SYSMSG_QUEUE_DEPTH) {
+			sysMsgTail = (uint8_t)((sysMsgTail + 1) % SYSMSG_QUEUE_DEPTH);
+			sysMsgCount--;
+	}
+
+	char* slot = pendingMessages[sysMsgHead];
+	strncpy(slot, msg, SYSMSG_TEXT_LEN - 1);
+	slot[SYSMSG_TEXT_LEN - 1] = '\0';
+	sysMsgHead = (uint8_t)((sysMsgHead + 1) % SYSMSG_QUEUE_DEPTH);
+	sysMsgCount++;
 }
 
 void Model::addUsbStateGraphPoint(uint8_t stateValue) {

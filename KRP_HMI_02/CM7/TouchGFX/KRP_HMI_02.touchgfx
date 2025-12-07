@@ -341,7 +341,7 @@
               {
                 "Type": "TextArea",
                 "Name": "textSysMessages",
-                "Width": 241,
+                "Width": 283,
                 "Height": 26,
                 "TextId": "T_SYS_MSG",
                 "TextRotation": "0",

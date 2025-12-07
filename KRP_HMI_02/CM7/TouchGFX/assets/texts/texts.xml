@@ -52,7 +52,7 @@
         <Translation Language="GB">USB State:</Translation>
       </Text>
       <Text Id="T_SYS_MSG_WILD" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">Text.,:_+-*/\&gt;&lt;()"'!?</Translation>
+        <Translation Language="GB">Text.,:_=+-*/\&gt;&lt;()"'!?%</Translation>
       </Text>
       <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
         <Translation Language="GB">Build 07.12.25</Translation>

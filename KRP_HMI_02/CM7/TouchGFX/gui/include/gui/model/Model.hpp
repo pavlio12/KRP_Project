@@ -41,8 +41,12 @@ protected:
 		char pendingUsbState[16];
 
     // System Message TextArea (scrollable)
-    bool hasNewMessage = false;
-		char pendingMessage[64];
+    static constexpr uint8_t SYSMSG_QUEUE_DEPTH = 10;
+    static constexpr uint8_t SYSMSG_TEXT_LEN    = 64;
+    char pendingMessages[SYSMSG_QUEUE_DEPTH][SYSMSG_TEXT_LEN];
+    uint8_t sysMsgHead = 0; // write index
+    uint8_t sysMsgTail = 0; // read index
+    uint8_t sysMsgCount = 0;
 
 		// USB State Dynamic Graph
 		bool hasNewUsbGraphPoint = false;

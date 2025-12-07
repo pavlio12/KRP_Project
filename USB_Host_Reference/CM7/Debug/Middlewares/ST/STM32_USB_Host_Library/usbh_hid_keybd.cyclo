@@ -1,0 +1,4 @@
+C:/Users/oopav/KRP/USB_Host_Reference/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c:409:20:USBH_HID_KeybdInit	3
+C:/Users/oopav/KRP/USB_Host_Reference/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c:454:25:USBH_HID_GetKeybdInfo	2
+C:/Users/oopav/KRP/USB_Host_Reference/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c:472:27:USBH_HID_KeybdDecode	5
+C:/Users/oopav/KRP/USB_Host_Reference/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c:512:9:USBH_HID_GetASCIICode	3

@@ -336,8 +336,6 @@ void MX_USB_HOST_Process(void)
 							hUsbHostHS.Control.errorcount);
     	HMI_addSystemMessage(msg);
 
-    	osDelay(10);
-
     	/*
       snprintf(msg, sizeof(msg), "Enum watchdog: stuck in %s, forcing port reset",
                usb_enum_state_to_str(hUsbHostHS.EnumState));
