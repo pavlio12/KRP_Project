@@ -22,11 +22,11 @@
 
 #include "usb_host.h"
 #include "usbh_core.h"
-// #include "usbh_audio.h"
+#include "usbh_audio.h"
 #include "usbh_cdc.h"
-// #include "usbh_msc.h"
+#include "usbh_msc.h"
 #include "usbh_hid.h"
-// #include "usbh_mtp.h"
+#include "usbh_mtp.h"
 
 /* USER CODE BEGIN Includes */
 #include "hmiBridge.h"
@@ -221,10 +221,12 @@ void MX_USB_HOST_Init(void)
 				Error_Handler();
 			}
   }
+
   /* if (USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS) != USBH_OK)
   {
     Error_Handler();
   }*/
+
   if (USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS) != USBH_OK)
   {
 			int errorvalue = 2;
@@ -232,10 +234,12 @@ void MX_USB_HOST_Init(void)
 				Error_Handler();
 			}
   }
-  /*if (USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS) != USBH_OK)
+
+  if (USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS) != USBH_OK)
   {
     Error_Handler();
-  }*/
+  }
+
   /*
   if (USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS) != USBH_OK)
   {
@@ -249,6 +253,7 @@ void MX_USB_HOST_Init(void)
   {
     Error_Handler();
   }*/
+
   if (USBH_Start(&hUsbHostHS) != USBH_OK)
   {
 			int errorvalue = 4;
