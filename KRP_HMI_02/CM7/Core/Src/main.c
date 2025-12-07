@@ -173,16 +173,12 @@ int main(void)
   }
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET); // Green
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET); // Yellow
-
   /* USER CODE BEGIN Init */
   // DRD: enable backup SRAM so we can store next USB role across reset
   // DRD_BackupInit();
   DRD_BackupDomainInit();
-  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); // Red
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -224,16 +220,15 @@ Error_Handler();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-  // MX_USB_DEVICE_Init();     // DRD task decides the role
-  HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_RESET); // Blue
+  // MX_USB_DEVICE_Init();   // DRD task decides the role
+  // MX_USB_HOST_Init();     // DRD task decides the role
 
   // Turn all LEDs off
-  /*
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET); // Green
   HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET); // Yellow
   HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); // Red
   HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, GPIO_PIN_SET); // Blue
-  */
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -265,7 +260,7 @@ Error_Handler();
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // LEDs
-  osThreadId_t ledTaskHandle;
+  osThreadId_t ledTaskHandle = NULL;
   const osThreadAttr_t ledTask_attributes = {
     .name = "ledTask",
     .priority = (osPriority_t) osPriorityLow,
@@ -273,8 +268,10 @@ Error_Handler();
   };
   ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
 
-  // USB Dual-Role-Device manager
-	osThreadId_t usbDrdTaskHandle;
+  // USB Dual-Role-Device Manager Task
+  // Decides Host VS Device, implements the switching logic
+	// USB_Device_Task or USB_Host_Task are created from the USB_DRD_Task
+  osThreadId_t usbDrdTaskHandle = NULL;
 	const osThreadAttr_t usbDrdTask_attributes = {
 		.name = "usbDrdTask",
 		.priority = osPriorityNormal,
@@ -282,15 +279,6 @@ Error_Handler();
 	};
 	usbDrdTaskHandle = osThreadNew(USB_DRD_Task, NULL, &usbDrdTask_attributes);
 
-  // USB
-	/*
-  osThreadId_t usbTaskHandle;
-  const osThreadAttr_t usbTask_attributes = {
-    .name = "usbTask",
-    .priority = osPriorityNormal,
-    .stack_size = 256 * 4
-  };
-  usbTaskHandle = osThreadNew(USB_Task, NULL, &usbTask_attributes);*/
 
   /* USER CODE END RTOS_THREADS */
 

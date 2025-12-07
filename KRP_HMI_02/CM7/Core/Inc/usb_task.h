@@ -47,7 +47,9 @@ void DRD_RequestModeSwitch(void);
 void DRD_BackupDomainInit(void);
 
 
-void USB_Task(void *argument);
+void USB_Device_Task(void *argument);
+void USB_Host_Task(void *argument);
+
 void USB_OnRx(uint8_t *buf, uint32_t len);
 void USB_SendString(const char* str);
 

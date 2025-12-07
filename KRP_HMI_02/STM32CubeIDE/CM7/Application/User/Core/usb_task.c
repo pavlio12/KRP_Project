@@ -53,19 +53,27 @@ static void DRD_BackupDomainInit(void)
 }*/
 
 
-void USB_Task(void *argument)
+void USB_Device_Task(void *argument)
 {
-		/*g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
+		g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
 		for (;;) {
-				usb_do_actions();       // Do current-state actions
-				usb_eval_transitions(); // Compute transitions + Update HMI screen
-				osDelay(10);            // 100 Hz update rate;
-		}*/
-		for (;;) {
-			osDelay(10);
+				if (g_usb_role == DRD_MODE_DEVICE) {
+						usb_do_actions();       // Do current-state actions
+						usb_eval_transitions(); // Compute transitions + Update HMI screen
+				}
+				osDelay(10);                // 100 Hz update rate;
 		}
+}
+
+void USB_Host_Task(void *argument)
+{
+  for (;;) {
+  		/* Use the logging wrapper to see host/enumeration state transitions */
+      MX_USB_HOST_Process();
+      osDelay(1);                   // 1 kHz update rate; Host needs fast polling
+  }
 }
 
 
@@ -75,11 +83,13 @@ void USB_DRD_Task(void *argument)
 		DRD_BackupDomainInit();
 		DRD_Mode_t boot_mode = DRD_ReadBootMode();
 
+		osThreadId_t usbDeviceTaskHandle = NULL;
+		osThreadId_t usbHostTaskHandle = NULL;
+
 		if (boot_mode == DRD_MODE_HOST)
 		{
-				HMI_addSystemMessage("Booting in USB Host mode");
-
 				// Show on Touch-Screen
+				HMI_addSystemMessage("Booting in USB Host mode");
 				HMI_setUsbRoleText("Host");
 
 				// 1) tell IRQ which handler to use
@@ -88,12 +98,19 @@ void USB_DRD_Task(void *argument)
 
 				// 2) then init host stack (enables IRQ)
 				MX_USB_HOST_Init();
-		}
-		else
-		{
-				HMI_addSystemMessage("Booting in USB Device mode");
 
+				// 3) Create Host task
+				const osThreadAttr_t usbHostTask_attributes = {
+						.name = "usbHostTask",
+						.priority = osPriorityHigh,
+						.stack_size = 256 * 4
+				};
+				usbHostTaskHandle = osThreadNew(USB_Host_Task, NULL, &usbHostTask_attributes);
+		}
+		else // if (boot_mode == DRD_MODE_DEVICE)
+		{
 				// Show on Touch-Screen
+				HMI_addSystemMessage("Booting in USB Device mode");
 				HMI_setUsbRoleText("Device");
 
 				// 1) tell IRQ which handler to use
@@ -102,25 +119,17 @@ void USB_DRD_Task(void *argument)
 
 				// 2) then init device stack (enables IRQ)
 				MX_USB_DEVICE_Init();
+
+				// 3) Create Device task
+				const osThreadAttr_t usbDeviceTask_attributes = {
+						.name = "usbDeviceTask",
+						.priority = osPriorityNormal,
+						.stack_size = 256 * 4
+				};
+				usbDeviceTaskHandle = osThreadNew(USB_Device_Task, NULL, &usbDeviceTask_attributes);
 		}
 
-		//A) Force HOST
-		/*
-		USBHS_IRQHandler_Func = USBHS_IRQHandler_HOST;
-		g_usb_role = DRD_MODE_HOST;
-
-		HMI_addSystemMessage("Force booting in Host mode");
-		MX_USB_HOST_Init();
-		*/
-
-		// B) Force DEVICE
-		/*
-		HMI_addSystemMessage("Force Booting in Device mode");
-		MX_USB_DEVICE_Init();
-		g_usb_role = DRD_MODE_DEVICE;
-		*/
-
-
+		// ---- DRD monitoring loop ----
     for (;;)
     {
         if (g_role_switch_requested)
@@ -128,14 +137,9 @@ void USB_DRD_Task(void *argument)
             g_role_switch_requested = 0;
             HMI_addSystemMessage("DRD: requesting role switch, system reset...");
             HMI_setUsbRoleText(">>>");
-            osDelay(10);               // Delay to show the messages on screen
-            DRD_RequestModeSwitch();   // SHOULD NEVER RETURN
-        }
+            osDelay(100);               // Delay to show the messages on screen
 
-        if (g_usb_role == DRD_MODE_HOST)
-        {
-            /* Use the logging wrapper to see host/enumeration state transitions */
-            MX_USB_HOST_Process();
+            DRD_RequestModeSwitch();   // SHOULD NEVER RETURN
         }
 
         osDelay(10);

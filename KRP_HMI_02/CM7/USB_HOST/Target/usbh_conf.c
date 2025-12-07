@@ -537,11 +537,11 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
     last_vbus_state = state;
     if (state == 0U)
     {
-      HMI_addSystemMessage("VBUS drive request: OFF (ensure downstream port is unpowered)");
+      HMI_addSystemMessage("VBUS drive request: OFF");
     }
     else
     {
-      HMI_addSystemMessage("VBUS drive request: ON (board must supply 5V to device)");
+      HMI_addSystemMessage("VBUS drive request: ON");
     }
   }
   /* USER CODE END 0*/
