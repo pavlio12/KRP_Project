@@ -55,7 +55,7 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  */
 /* USER CODE BEGIN 0 */
 
-#define USB_ENUM_STALL_TIMEOUT 10000U
+#define USB_ENUM_STALL_TIMEOUT 20000U   // [ms]
 
 static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed)
 {
@@ -320,11 +320,31 @@ void MX_USB_HOST_Process(void)
     }
     if ((now - enum_state_enter_ms) > USB_ENUM_STALL_TIMEOUT)
     {
-      enum_state_enter_ms = now;
-      char msg[96];
+    	// Enumeration stalls for too long!
+    	enum_state_enter_ms = now;
+
+    	// Log the details on screen
+			char msg[96];
+    	USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
+    	USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
+    	snprintf(msg, sizeof(msg),
+    					"Enum watchdog: state=%s req=%d ctrl=%d urb_out=%d urb_in=%d err=%d",
+							usb_enum_state_to_str(hUsbHostHS.EnumState),
+							hUsbHostHS.RequestState,
+							hUsbHostHS.Control.state,
+							urb_out, urb_in,
+							hUsbHostHS.Control.errorcount);
+    	HMI_addSystemMessage(msg);
+
+    	osDelay(10);
+
+    	/*
       snprintf(msg, sizeof(msg), "Enum watchdog: stuck in %s, forcing port reset",
                usb_enum_state_to_str(hUsbHostHS.EnumState));
       HMI_addSystemMessage(msg);
+      */
+
+      // ReEnumerate USB
       (void)USBH_ReEnumerate(&hUsbHostHS);
     }
   }
@@ -341,19 +361,19 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   break;
 
   case HOST_USER_DISCONNECTION:
-  Appli_state = APPLICATION_DISCONNECT;
-  HMI_addSystemMessage("USB device disconnected");
+		Appli_state = APPLICATION_DISCONNECT;
+		HMI_addSystemMessage("USB device disconnected");
   break;
 
   case HOST_USER_CLASS_ACTIVE:
-  Appli_state = APPLICATION_READY;
-  HMI_addSystemMessage("USB device enumerated (class ready)");
-  log_connected_device_info(phost);
+		Appli_state = APPLICATION_READY;
+		HMI_addSystemMessage("USB device enumerated (class ready)");
+		log_connected_device_info(phost);
   break;
 
   case HOST_USER_CONNECTION:
-  Appli_state = APPLICATION_START;
-  HMI_addSystemMessage("USB device connected, enumerating...");
+		Appli_state = APPLICATION_START;
+		HMI_addSystemMessage("USB device connected, enumerating...");
   break;
 
   default:

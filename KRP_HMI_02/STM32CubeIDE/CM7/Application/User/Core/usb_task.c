@@ -79,6 +79,9 @@ void USB_DRD_Task(void *argument)
 		{
 				HMI_addSystemMessage("Booting in USB Host mode");
 
+				// Show on Touch-Screen
+				HMI_setUsbRoleText("Host");
+
 				// 1) tell IRQ which handler to use
 				USBHS_IRQHandler_Func = USBHS_IRQHandler_HOST;
 				g_usb_role = DRD_MODE_HOST;
@@ -89,6 +92,9 @@ void USB_DRD_Task(void *argument)
 		else
 		{
 				HMI_addSystemMessage("Booting in USB Device mode");
+
+				// Show on Touch-Screen
+				HMI_setUsbRoleText("Device");
 
 				// 1) tell IRQ which handler to use
 				USBHS_IRQHandler_Func = USBHS_IRQHandler_DEVICE;
@@ -121,6 +127,8 @@ void USB_DRD_Task(void *argument)
         {
             g_role_switch_requested = 0;
             HMI_addSystemMessage("DRD: requesting role switch, system reset...");
+            HMI_setUsbRoleText(">>>");
+            osDelay(10);               // Delay to show the messages on screen
             DRD_RequestModeSwitch();   // SHOULD NEVER RETURN
         }
 

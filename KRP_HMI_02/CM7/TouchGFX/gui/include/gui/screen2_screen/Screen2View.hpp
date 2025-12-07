@@ -23,13 +23,14 @@ public:
     virtual void appendSystemMessage(const char* msg);
     virtual void prependSystemMessage(const char *msg);
 
-
+    static const uint16_t USB_ROLE_BUFFER_SIZE = 16;
+    static const uint16_t USB_STATE_BUFFER_SIZE = 16;
 		static const uint16_t SYS_MSG_BUFFER_SIZE = 1024;    // adjust!
 
 
-
-
 protected:
+		Unicode::UnicodeChar UsbRoleBuffer[USB_ROLE_BUFFER_SIZE];
+		Unicode::UnicodeChar UsbStateBuffer[USB_STATE_BUFFER_SIZE];
     Unicode::UnicodeChar sysMsgBuffer[SYS_MSG_BUFFER_SIZE];  // actual buffer
 };
 
