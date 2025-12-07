@@ -126,7 +126,8 @@ void USB_DRD_Task(void *argument)
 
         if (g_usb_role == DRD_MODE_HOST)
         {
-            USBH_Process(&hUsbHostHS);
+            /* Use the logging wrapper to see host/enumeration state transitions */
+            MX_USB_HOST_Process();
         }
 
         osDelay(10);

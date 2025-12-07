@@ -71,7 +71,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB;
-    PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL;
+    PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();
@@ -84,12 +84,13 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOI_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**USB_OTG_HS GPIO Configuration
     PB5     ------> USB_OTG_HS_ULPI_D7
     PI11     ------> USB_OTG_HS_ULPI_DIR
     PC0     ------> USB_OTG_HS_ULPI_STP
-    PC3     ------> USB_OTG_HS_ULPI_NXT
+    PH4     ------> USB_OTG_HS_ULPI_NXT
     PB10     ------> USB_OTG_HS_ULPI_D3
     PB11     ------> USB_OTG_HS_ULPI_D4
     PA5     ------> USB_OTG_HS_ULPI_CK
@@ -115,12 +116,19 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
     HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_3;
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
+    HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -141,7 +149,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(OTG_HS_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
   /* USER CODE BEGIN USB_OTG_HS_MspInit 1 */
 
@@ -164,7 +172,7 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hcdHandle)
     PB5     ------> USB_OTG_HS_ULPI_D7
     PI11     ------> USB_OTG_HS_ULPI_DIR
     PC0     ------> USB_OTG_HS_ULPI_STP
-    PC3     ------> USB_OTG_HS_ULPI_NXT
+    PH4     ------> USB_OTG_HS_ULPI_NXT
     PB10     ------> USB_OTG_HS_ULPI_D3
     PB11     ------> USB_OTG_HS_ULPI_D4
     PA5     ------> USB_OTG_HS_ULPI_CK
@@ -180,7 +188,9 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hcdHandle)
 
     HAL_GPIO_DeInit(GPIOI, GPIO_PIN_11);
 
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_3);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
+
+    HAL_GPIO_DeInit(GPIOH, GPIO_PIN_4);
 
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_3|GPIO_PIN_4);
 
