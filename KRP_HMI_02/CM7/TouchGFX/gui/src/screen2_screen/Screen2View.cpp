@@ -22,7 +22,7 @@ void Screen2View::tearDownScreen()
 
 void Screen2View::setUsbRoleText(const char* msg)
 {
-		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg ? msg : ""), UsbRoleBuffer, USB_ROLE_BUFFER_SIZE);
+		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg ? msg : ""), textUsbRoleBuffer, TEXTUSBROLE_SIZE);
 		textUsbRole.setWildcard(textUsbRoleBuffer);
 		textUsbRole.resizeToCurrentText();
 		textUsbRole.invalidateContent();
@@ -30,7 +30,7 @@ void Screen2View::setUsbRoleText(const char* msg)
 
 void Screen2View::setUsbStateText(const char* msg)
 {
-		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg ? msg : ""), UsbStateBuffer, USB_STATE_BUFFER_SIZE);
+		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg ? msg : ""), textUsbStateBuffer, TEXTUSBSTATE_SIZE);
 		textUsbState.setWildcard(textUsbStateBuffer);
 		textUsbState.resizeToCurrentText();
 		textUsbState.invalidateContent();
@@ -39,9 +39,9 @@ void Screen2View::setUsbStateText(const char* msg)
 
 void Screen2View::setSystemMessage(const char* msg)
 {
-		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg), sysMsgBuffer, SYS_MSG_BUFFER_SIZE);
+		Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg), textSysMessagesBuffer, TEXTSYSMESSAGES_SIZE);
 		textSysMessages.invalidateContent();
-		textSysMessages.setWildcard(sysMsgBuffer);
+		textSysMessages.setWildcard(textSysMessagesBuffer);
 		textSysMessages.resizeToCurrentText();
 		textSysMessages.invalidateContent();
 		// textSysMessages.invalidate();
@@ -54,21 +54,21 @@ void Screen2View::appendSystemMessage(const char* msg)
     Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg), newMsg, 128);
 
     // Find current length in sysMsgBuffer
-    size_t len = Unicode::strlen(sysMsgBuffer);
+    size_t len = Unicode::strlen(textSysMessagesBuffer);
 
     // Add a newline if there's already text
-    if (len > 0 && len < SYS_MSG_BUFFER_SIZE - 2)
-        sysMsgBuffer[len++] = '\n';
+    if (len > 0 && len < TEXTSYSMESSAGES_SIZE - 2)
+    	textSysMessagesBuffer[len++] = '\n';
 
     // Copy new message into sysMsgBuffer
-    size_t remaining = SYS_MSG_BUFFER_SIZE - len - 1;
-    Unicode::strncpy(sysMsgBuffer + len, newMsg, remaining);
+    size_t remaining = TEXTSYSMESSAGES_SIZE - len - 1;
+    Unicode::strncpy(textSysMessagesBuffer + len, newMsg, remaining);
 
     // Ensure termination
-    sysMsgBuffer[SYS_MSG_BUFFER_SIZE - 1] = 0;
+    textSysMessagesBuffer[TEXTSYSMESSAGES_SIZE - 1] = 0;
 
     textSysMessages.invalidateContent();
-    textSysMessages.setWildcard(sysMsgBuffer);
+    textSysMessages.setWildcard(textSysMessagesBuffer);
     textSysMessages.resizeToCurrentText();
     textSysMessages.invalidateContent();
 
@@ -79,26 +79,26 @@ void Screen2View::prependSystemMessage(const char *msg) {
 	Unicode::UnicodeChar newMsg[128];
 	Unicode::fromUTF8(reinterpret_cast<const uint8_t*>(msg ? msg : ""), newMsg, 128);
 
-	Unicode::UnicodeChar newBuffer[SYS_MSG_BUFFER_SIZE];
+	Unicode::UnicodeChar newBuffer[TEXTSYSMESSAGES_SIZE];
 	newBuffer[0] = 0;
 
 	// Copy new message first
-	Unicode::strncpy(newBuffer, newMsg, SYS_MSG_BUFFER_SIZE - 1);
+	Unicode::strncpy(newBuffer, newMsg, TEXTSYSMESSAGES_SIZE - 1);
 
 	// Add newline
 	size_t len = Unicode::strlen(newBuffer);
-	if (len < SYS_MSG_BUFFER_SIZE - 2) {
+	if (len < TEXTSYSMESSAGES_SIZE - 2) {
 			newBuffer[len++] = '\n';
 			newBuffer[len]   = 0;
 	}
 
 	// Append the old buffer *after* new message
-	size_t remaining = SYS_MSG_BUFFER_SIZE - len - 1;
-	Unicode::strncpy(newBuffer + len, sysMsgBuffer, remaining);
-	newBuffer[SYS_MSG_BUFFER_SIZE - 1] = 0;
+	size_t remaining = TEXTSYSMESSAGES_SIZE - len - 1;
+	Unicode::strncpy(newBuffer + len, textSysMessagesBuffer, remaining);
+	newBuffer[TEXTSYSMESSAGES_SIZE - 1] = 0;
 
 	// Copy back
-	Unicode::strncpy(sysMsgBuffer, newBuffer, SYS_MSG_BUFFER_SIZE);
+	Unicode::strncpy(textSysMessagesBuffer, newBuffer, TEXTSYSMESSAGES_SIZE);
 
 	// Update on screen
 	textSysMessages.resizeToCurrentText();

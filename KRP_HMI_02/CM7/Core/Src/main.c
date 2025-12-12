@@ -260,24 +260,22 @@ Error_Handler();
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // LEDs
-  osThreadId_t ledTaskHandle = NULL;
   const osThreadAttr_t ledTask_attributes = {
     .name = "ledTask",
     .priority = (osPriority_t) osPriorityLow,
     .stack_size = 128 * 4
   };
-  ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
+  osThreadId_t ledTaskHandle = osThreadNew(LED_Task, NULL, &ledTask_attributes);
 
   // USB Dual-Role-Device Manager Task
   // Decides Host VS Device, implements the switching logic
 	// USB_Device_Task or USB_Host_Task are created from the USB_DRD_Task
-  osThreadId_t usbDrdTaskHandle = NULL;
 	const osThreadAttr_t usbDrdTask_attributes = {
 		.name = "usbDrdTask",
 		.priority = osPriorityNormal,
 		.stack_size = 256 * 4
 	};
-	usbDrdTaskHandle = osThreadNew(USB_DRD_Task, NULL, &usbDrdTask_attributes);
+	osThreadId_t usbDrdTaskHandle = osThreadNew(USB_DRD_Task, NULL, &usbDrdTask_attributes);
 
 
   /* USER CODE END RTOS_THREADS */

@@ -55,7 +55,9 @@ static void DRD_BackupDomainInit(void)
 
 void USB_Device_Task(void *argument)
 {
+		HMI_setUsbRoleText("Device");
 		g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
+		HMI_setUsbStateText(USB_GetStateString());
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
 		for (;;) {
@@ -69,6 +71,7 @@ void USB_Device_Task(void *argument)
 
 void USB_Host_Task(void *argument)
 {
+	HMI_setUsbRoleText("Host");
   for (;;) {
   		/* Use the logging wrapper to see host/enumeration state transitions */
       MX_USB_HOST_Process();
@@ -137,7 +140,7 @@ void USB_DRD_Task(void *argument)
             g_role_switch_requested = 0;
             HMI_addSystemMessage("DRD: requesting role switch, system reset...");
             HMI_setUsbRoleText(">>>");
-            osDelay(100);               // Delay to show the messages on screen
+            // osDelay(100);               // Delay to show the messages on screen
 
             DRD_RequestModeSwitch();   // SHOULD NEVER RETURN
         }

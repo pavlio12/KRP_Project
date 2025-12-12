@@ -7,6 +7,7 @@
 
 #include "usb_fsm.h"
 #include "usbd_cdc_if.h"
+#include "hmiBridge.h"
 
 
 USB_FSM g_usb = { .state = USB_LS_INIT,
@@ -87,11 +88,7 @@ void usb_eval_transitions(void) {
     if (next != g_usb.state) {
         g_usb.prev = g_usb.state;
         g_usb.state   = next;
-
-        // push link-state sample to the graph
-        HMI_addUsbStateGraphPoint(USB_GetStateID());
         hmi_updated = true;
-
         // housekeeping on entry
         if (g_usb.state != USB_LS_CONFIGURED) {
             g_usb.activity.tx_busy = false; // clear activity flags if we left CONFIGURED
@@ -99,15 +96,18 @@ void usb_eval_transitions(void) {
     }
 
     // Emit TX/RX pulses for the plot without changing link state
-    if (g_usb.activity.tx_done) {
-        HMI_addUsbStateGraphPoint(USB_GetStateID());   // TX pulse
+    if (g_usb.activity.tx_done) { // TX pulse
         hmi_updated = true;
         g_usb.activity.tx_done = false;
     }
-    if (g_usb.activity.rx_ready) {
-        HMI_addUsbStateGraphPoint(USB_GetStateID());   // RX pulse
+    if (g_usb.activity.rx_ready) { // RX pulse
         hmi_updated = true;
         g_usb.activity.rx_ready = false;
+    }
+
+    if (hmi_updated) {
+    	HMI_setUsbStateText(USB_GetStateString());
+    	HMI_addUsbStateGraphPoint(USB_GetStateID());
     }
 
 
