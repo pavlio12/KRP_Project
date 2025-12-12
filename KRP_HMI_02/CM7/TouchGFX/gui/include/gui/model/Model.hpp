@@ -38,10 +38,14 @@ protected:
     // USB Role Text
     bool hasNewUsbRole = false;
     char pendingUsbRole[16];
+    char lastUsbRole[16] = {0};
+    bool hasLastUsbRole = false;
 
     // USB State Text
 		bool hasNewUsbState = false;
 		char pendingUsbState[16];
+    char lastUsbState[16] = {0};
+    bool hasLastUsbState = false;
 
     // System Message TextArea (scrollable)
     static constexpr uint8_t SYSMSG_QUEUE_DEPTH = 10;
@@ -64,7 +68,7 @@ protected:
 		uint16_t usbHistoryCount = 0;
 
 private:
-    void appendToSystemLog(const char* msg);
+    void prependToSystemLog(const char* msg);
 };
 
 #endif // MODEL_HPP

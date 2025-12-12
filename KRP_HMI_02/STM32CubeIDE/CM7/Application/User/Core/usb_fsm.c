@@ -20,6 +20,10 @@ static inline uint32_t now_ms(void) { return osKernelGetTickCount(); }
 
 extern USBD_HandleTypeDef hUsbDeviceHS;
 
+static char txbuf[64];
+static uint8_t rxbuf[64];
+static char msg[64];
+
 // Top-level actions dispatcher (called every RTOS tick of the USB task)
 void usb_do_actions(void) {
     switch (g_usb.state) {
@@ -40,28 +44,32 @@ void do_ADDRESSED(void) {
 }
 
 void do_CONFIGURED(void) {
-    // Example: heartbeat once per second if TX not busy
+    // Heartbeat message once per second if TX not busy
+	  // TODO: Is this approach correct?
     uint32_t t = now_ms();
-    if ((t - g_usb.last_hb_tick) >= 1000 && !g_usb.activity.tx_busy) {
+    if ((t - g_usb.last_hb_tick) >= 1000) {
         g_usb.last_hb_tick = t;
 
-        char hb[64];
-        int len = snprintf(hb, sizeof(hb), "Hello from STM %lu\r\n", t);
+        if (!g_usb.activity.tx_busy) {
+						int len = snprintf(txbuf, sizeof(txbuf), "Hello from STM %lu\r\n", t);
 
-        USBD_CDC_HandleTypeDef* hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
-        if (hcdc && hcdc->TxState == 0) {
-            USBD_CDC_SetTxBuffer(&hUsbDeviceHS, (uint8_t*)hb, (uint16_t)len);
-            if (USBD_CDC_TransmitPacket(&hUsbDeviceHS) == USBD_OK) { // Message accepted for sending
-                g_usb.activity.tx_busy = true;
-            }
+						USBD_CDC_HandleTypeDef* hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
+						if (hcdc && hcdc->TxState == 0) {
+								USBD_CDC_SetTxBuffer(&hUsbDeviceHS, (uint8_t*)txbuf, (uint16_t)len);
+								if (USBD_CDC_TransmitPacket(&hUsbDeviceHS) == USBD_OK) { // Message accepted for sending
+										g_usb.activity.tx_busy = true;
+								}
+						}
+        }
+        else {
+        		// TODO: Should we do something? Is it a good idea to design the USBD logic based on our own custom g_usb.state? Is it stable and robust?
         }
     }
 
     // Drain RX queue (non-blocking)
-    uint8_t msg[64];
-    if (g_usb.rxQ && osMessageQueueGet(g_usb.rxQ, msg, NULL, 0) == osOK) {
+    if (g_usb.rxQ && osMessageQueueGet(g_usb.rxQ, rxbuf, NULL, 0) == osOK) {
         // Do something with msg (parse commands, update HMI, etc.)
-        HMI_addSystemMessage((char*)msg);
+        HMI_addSystemMessage((char*)rxbuf);
         g_usb.activity.rx_ready = true;            // pulse for graph
     }
 }
@@ -89,7 +97,6 @@ void usb_eval_transitions(void) {
         g_usb.prev = g_usb.state;
         g_usb.state   = next;
 
-				char msg[64];
 				snprintf(msg, sizeof(msg), "USBD state -> %s", USB_GetStateString());
 				HMI_addSystemMessage(msg);
 

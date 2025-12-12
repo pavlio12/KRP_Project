@@ -64,12 +64,18 @@ void Model::setUsbRoleText(const char* msg) {
 	strncpy(pendingUsbRole, msg, sizeof(pendingUsbRole) - 1);
 	pendingUsbRole[sizeof(pendingUsbRole) - 1] = '\0';
 	hasNewUsbRole = true;
+    strncpy(lastUsbRole, pendingUsbRole, sizeof(lastUsbRole) - 1);
+    lastUsbRole[sizeof(lastUsbRole) - 1] = '\0';
+    hasLastUsbRole = true;
 }
 
 void Model::setUsbStateText(const char* msg) {
 	strncpy(pendingUsbState, msg, sizeof(pendingUsbState) - 1);
 	pendingUsbState[sizeof(pendingUsbState) - 1] = '\0';
 	hasNewUsbState = true;
+    strncpy(lastUsbState, pendingUsbState, sizeof(lastUsbState) - 1);
+    lastUsbState[sizeof(lastUsbState) - 1] = '\0';
+    hasLastUsbState = true;
 }
 
 void Model::addSystemMessage(const char* msg) {
@@ -77,7 +83,7 @@ void Model::addSystemMessage(const char* msg) {
             return;
     }
 
-    appendToSystemLog(msg);
+    prependToSystemLog(msg);
 
     if (!screen2Active) {
         needsFullSysMsgSync = true;
@@ -115,6 +121,14 @@ void Model::setScreen2Active(bool active)
     screen2Active = active;
     if (active) {
         needsFullSysMsgSync = true;
+        if (modelListener) {
+            if (hasLastUsbRole) {
+                modelListener->setUsbRoleText(lastUsbRole);
+            }
+            if (hasLastUsbState) {
+                modelListener->setUsbStateText(lastUsbState);
+            }
+        }
     } else {
         resetPendingSystemMessages();
     }
@@ -127,7 +141,7 @@ void Model::resetPendingSystemMessages()
     sysMsgCount = 0;
 }
 
-void Model::appendToSystemLog(const char* msg)
+void Model::prependToSystemLog(const char* msg)
 {
     if (!msg) {
         return;
@@ -137,33 +151,65 @@ void Model::appendToSystemLog(const char* msg)
     if (msgLen >= SYSMSG_TEXT_LEN) {
         msgLen = SYSMSG_TEXT_LEN - 1;
     }
-    bool needsNewline = (sysMsgLogLen > 0);
-    size_t totalAdd = msgLen + (needsNewline ? 1U : 0U);
+    // We will prepend, so calculate space: new message + optional newline if existing text
+    bool hasExisting = (sysMsgLogLen > 0);
+    size_t totalAdd = msgLen + (hasExisting ? 1U : 0U);
 
-    // Ensure we have room; drop oldest line(s) if necessary
+    // Ensure space by trimming from the end (oldest text) if needed
     while ((sysMsgLogLen + totalAdd) >= SYSMSG_LOG_SIZE && sysMsgLogLen > 0) {
-        char* firstNewline = static_cast<char*>(memchr(sysMsgLog, '\n', sysMsgLogLen));
-        if (firstNewline) {
-            size_t dropLen = static_cast<size_t>(firstNewline - sysMsgLog) + 1U;
-            memmove(sysMsgLog, firstNewline + 1, sysMsgLogLen - dropLen);
-            sysMsgLogLen -= dropLen;
+        // Find last newline manually (no memrchr in some libs)
+        size_t lastNlIndex = sysMsgLogLen;
+        bool found = false;
+        while (lastNlIndex > 0) {
+            if (sysMsgLog[lastNlIndex - 1] == '\n') {
+                found = true;
+                break;
+            }
+            lastNlIndex--;
+        }
+
+        if (found) {
+            sysMsgLogLen = lastNlIndex - 1;
+            if (sysMsgLogLen > SYSMSG_LOG_SIZE - 1) {
+                sysMsgLogLen = SYSMSG_LOG_SIZE - 1;
+            }
+            sysMsgLog[sysMsgLogLen] = '\0';
         } else {
             sysMsgLogLen = 0;
+            sysMsgLog[0] = '\0';
             break;
         }
     }
+    hasExisting = (sysMsgLogLen > 0);
 
-    if (needsNewline && sysMsgLogLen < SYSMSG_LOG_SIZE - 1) {
-        sysMsgLog[sysMsgLogLen++] = '\n';
+    // Shift existing content to make room for new message + optional newline
+    // Recalculate msg length to fit
+    size_t maxMsgLen = SYSMSG_LOG_SIZE - 1;
+    if (hasExisting && maxMsgLen > 0) {
+        maxMsgLen -= 1;
+    }
+    if (sysMsgLogLen < maxMsgLen && msgLen > (maxMsgLen - sysMsgLogLen)) {
+        msgLen = maxMsgLen - sysMsgLogLen;
+    }
+    totalAdd = msgLen + (hasExisting ? 1U : 0U);
+
+    size_t shiftLen = sysMsgLogLen;
+    if (shiftLen > 0) {
+        memmove(sysMsgLog + totalAdd, sysMsgLog, shiftLen);
     }
 
-    size_t copyLen = (msgLen < (SYSMSG_LOG_SIZE - 1 - sysMsgLogLen))
-                     ? msgLen
-                     : (SYSMSG_LOG_SIZE - 1 - sysMsgLogLen);
-    memcpy(sysMsgLog + sysMsgLogLen, msg, copyLen);
-    sysMsgLogLen += copyLen;
+    // Copy new message at start
+    memcpy(sysMsgLog, msg, msgLen);
+    sysMsgLogLen = msgLen + shiftLen + (hasExisting ? 1U : 0U);
+
+    // Insert newline after new message if needed
+    if (hasExisting && msgLen < SYSMSG_LOG_SIZE - 1) {
+        sysMsgLog[msgLen] = '\n';
+    }
+
+    // After possible newline, ensure null-termination
+    if (sysMsgLogLen >= SYSMSG_LOG_SIZE) {
+        sysMsgLogLen = SYSMSG_LOG_SIZE - 1;
+    }
     sysMsgLog[sysMsgLogLen] = '\0';
 }
-
-
-
