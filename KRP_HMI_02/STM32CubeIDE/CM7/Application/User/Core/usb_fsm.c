@@ -23,6 +23,9 @@ extern USBD_HandleTypeDef hUsbDeviceHS;
 static char txbuf[64];
 static uint8_t rxbuf[64];
 static char msg[64];
+static bool hb_pending = false;
+static uint16_t hb_len = 0;
+static uint32_t tx_guard_started = 0;
 
 // Top-level actions dispatcher (called every RTOS tick of the USB task)
 void usb_do_actions(void) {
@@ -50,19 +53,38 @@ void do_CONFIGURED(void) {
     if ((t - g_usb.last_hb_tick) >= 1000) {
         g_usb.last_hb_tick = t;
 
-        if (!g_usb.activity.tx_busy) {
-						int len = snprintf(txbuf, sizeof(txbuf), "Hello from STM %lu\r\n", t);
+        hb_len = (uint16_t)snprintf(txbuf, sizeof(txbuf), "Hello from STM %lu\r\n", t);
+        hb_pending = true;
+    }
 
-						USBD_CDC_HandleTypeDef* hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
-						if (hcdc && hcdc->TxState == 0) {
-								USBD_CDC_SetTxBuffer(&hUsbDeviceHS, (uint8_t*)txbuf, (uint16_t)len);
-								if (USBD_CDC_TransmitPacket(&hUsbDeviceHS) == USBD_OK) { // Message accepted for sending
-										g_usb.activity.tx_busy = true;
-								}
-						}
-        }
-        else {
-        		// TODO: Should we do something? Is it a good idea to design the USBD logic based on our own custom g_usb.state? Is it stable and robust?
+    if (!g_usb.activity.tx_busy) {
+        tx_guard_started = 0;
+    }
+
+    // Guard: if TX busy for too long, clear our busy flag to allow retry
+    if (g_usb.activity.tx_busy && tx_guard_started != 0 && (t - tx_guard_started) > 2000) {
+        g_usb.activity.tx_busy = false;
+        // requeue last heartbeat if it was in flight
+        hb_pending = true;
+        tx_guard_started = 0;
+    }
+
+    if (hb_pending && !g_usb.activity.tx_busy) {
+        uint8_t res = CDC_Transmit_HS((uint8_t*)txbuf, hb_len);
+        if (res == USBD_OK) {
+            g_usb.activity.tx_busy = true;
+            tx_guard_started = t;
+            hb_pending = false;
+        } else if (res == USBD_BUSY) {
+            // leave hb_pending true; retry later
+            if (tx_guard_started == 0) {
+                tx_guard_started = t;
+            }
+        } else {
+            // fail: drop this message and clear busy/guard so we don't stall
+            g_usb.activity.tx_busy = false;
+            tx_guard_started = 0;
+            hb_pending = false;
         }
     }
 
@@ -157,6 +179,4 @@ const uint8_t USB_GetStateID(void)
 				default:                            return 7;
 		}
 }
-
-
 
