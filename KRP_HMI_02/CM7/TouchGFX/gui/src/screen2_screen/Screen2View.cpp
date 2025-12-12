@@ -10,9 +10,6 @@ Screen2View::Screen2View()
 void Screen2View::setupScreen()
 {
     Screen2ViewBase::setupScreen();
-
-    setSystemMessage("HMI initialized");
-
 }
 
 void Screen2View::tearDownScreen()

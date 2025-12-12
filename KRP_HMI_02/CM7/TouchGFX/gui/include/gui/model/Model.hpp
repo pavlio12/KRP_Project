@@ -27,6 +27,9 @@ public:
 
     const uint8_t* getUSBStateHistory() const { return usbHistory; }
 		uint16_t getUSBStateHistorySize() const { return usbHistoryCount; }
+    const char* getSystemMessageLog() const { return sysMsgLog; }
+    void setScreen2Active(bool active);
+    void resetPendingSystemMessages();
 
 
 protected:
@@ -47,6 +50,11 @@ protected:
     uint8_t sysMsgHead = 0; // write index
     uint8_t sysMsgTail = 0; // read index
     uint8_t sysMsgCount = 0;
+    static constexpr uint16_t SYSMSG_LOG_SIZE = 1024;
+    char sysMsgLog[SYSMSG_LOG_SIZE];
+    uint16_t sysMsgLogLen = 0;
+    bool screen2Active = false;
+    bool needsFullSysMsgSync = true;
 
 		// USB State Dynamic Graph
 		bool hasNewUsbGraphPoint = false;
@@ -54,6 +62,9 @@ protected:
 
 		uint8_t  usbHistory[USB_GRAPH_HISTORY];
 		uint16_t usbHistoryCount = 0;
+
+private:
+    void appendToSystemLog(const char* msg);
 };
 
 #endif // MODEL_HPP

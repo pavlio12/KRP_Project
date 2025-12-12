@@ -88,6 +88,11 @@ void usb_eval_transitions(void) {
     if (next != g_usb.state) {
         g_usb.prev = g_usb.state;
         g_usb.state   = next;
+
+				char msg[64];
+				snprintf(msg, sizeof(msg), "USBD state -> %s", USB_GetStateString());
+				HMI_addSystemMessage(msg);
+
         hmi_updated = true;
         // housekeeping on entry
         if (g_usb.state != USB_LS_CONFIGURED) {
