@@ -20,7 +20,7 @@ static inline uint32_t now_ms(void) { return osKernelGetTickCount(); }
 
 extern USBD_HandleTypeDef hUsbDeviceHS;
 
-static char txbuf[64];
+static __attribute__((aligned(4))) uint8_t txbuf[64];
 static uint8_t rxbuf[64];
 static char msg[64];
 static bool hb_pending = false;
