@@ -298,16 +298,24 @@ uint8_t CDC_Transmit_HS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 12 */
+  // TODO: This is causing a HardFault during or slightly after the Enumeration with laptop (USB Host).
+  // We need to figure out why this causes the Hardfault.
+  /*
+  if (hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED) {
+    return USBD_FAIL;
+  }
+
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceHS.pClassData;
   if (hcdc == NULL) {
     return USBD_FAIL;
   }
-  if (hcdc->TxState != 0) {
+  if (hcdc->TxState != 0U) {
     return USBD_BUSY;
   }
 
   USBD_CDC_SetTxBuffer(&hUsbDeviceHS, Buf, Len);
   result = USBD_CDC_TransmitPacket(&hUsbDeviceHS);
+  */
   /* USER CODE END 12 */
   return result;
 }

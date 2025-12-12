@@ -25,7 +25,7 @@ static uint8_t rxbuf[64];
 static char msg[64];
 static bool hb_pending = false;
 static uint16_t hb_len = 0;
-static uint32_t tx_guard_started = 0;
+static uint32_t last_tx_attempt = 0;
 
 // Top-level actions dispatcher (called every RTOS tick of the USB task)
 void usb_do_actions(void) {
@@ -57,40 +57,25 @@ void do_CONFIGURED(void) {
         hb_pending = true;
     }
 
-    if (!g_usb.activity.tx_busy) {
-        tx_guard_started = 0;
-    }
-
-    // Guard: if TX busy for too long, clear our busy flag to allow retry
-    if (g_usb.activity.tx_busy && tx_guard_started != 0 && (t - tx_guard_started) > 2000) {
-        g_usb.activity.tx_busy = false;
-        // requeue last heartbeat if it was in flight
-        hb_pending = true;
-        tx_guard_started = 0;
-    }
-
-    if (hb_pending && !g_usb.activity.tx_busy) {
+    // Send when pending; retry on BUSY with backoff, no guard clearing
+    if (hb_pending && (t - last_tx_attempt) >= 10) { // 10ms retry spacing
+        last_tx_attempt = t;
         uint8_t res = CDC_Transmit_HS((uint8_t*)txbuf, hb_len);
         if (res == USBD_OK) {
             g_usb.activity.tx_busy = true;
-            tx_guard_started = t;
             hb_pending = false;
         } else if (res == USBD_BUSY) {
-            // leave hb_pending true; retry later
-            if (tx_guard_started == 0) {
-                tx_guard_started = t;
-            }
-        } else {
-            // fail: drop this message and clear busy/guard so we don't stall
-            g_usb.activity.tx_busy = false;
-            tx_guard_started = 0;
+            // stay pending, retry later
+        } else { // FAIL or not configured
             hb_pending = false;
+            g_usb.activity.tx_busy = false;
         }
     }
 
     // Drain RX queue (non-blocking)
     if (g_usb.rxQ && osMessageQueueGet(g_usb.rxQ, rxbuf, NULL, 0) == osOK) {
         // Do something with msg (parse commands, update HMI, etc.)
+    		// TODO: Check if the rxbuf is safe to print and terminated with \0
         HMI_addSystemMessage((char*)rxbuf);
         g_usb.activity.rx_ready = true;            // pulse for graph
     }
@@ -179,4 +164,3 @@ const uint8_t USB_GetStateID(void)
 				default:                            return 7;
 		}
 }
-

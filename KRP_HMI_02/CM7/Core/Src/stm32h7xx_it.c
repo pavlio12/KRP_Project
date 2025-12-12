@@ -54,6 +54,43 @@
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Use the ST debugger tool to inspect the g_hardfault_regs when a HardFault happens.
+typedef struct {
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r12;
+  uint32_t lr;
+  uint32_t pc;
+  uint32_t psr;
+} HardFaultRegs;
+
+__attribute__((used)) volatile HardFaultRegs g_hardfault_regs;
+
+__attribute__((used)) static void HardFault_Capture(uint32_t *sp) {
+  g_hardfault_regs.r0  = sp[0];
+  g_hardfault_regs.r1  = sp[1];
+  g_hardfault_regs.r2  = sp[2];
+  g_hardfault_regs.r3  = sp[3];
+  g_hardfault_regs.r12 = sp[4];
+  g_hardfault_regs.lr  = sp[5];
+  g_hardfault_regs.pc  = sp[6];
+  g_hardfault_regs.psr = sp[7];
+  while (1) { __NOP(); }
+}
+
+__attribute__((naked)) void HardFault_Handler(void)
+{
+  __asm volatile
+  (
+      "tst lr, #4        \n"
+      "ite eq            \n"
+      "mrseq r0, msp     \n"
+      "mrsne r0, psp     \n"
+      "b HardFault_Capture\n"
+  );
+}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -86,21 +123,6 @@ void NMI_Handler(void)
   {
   }
   /* USER CODE END NonMaskableInt_IRQn 1 */
-}
-
-/**
-  * @brief This function handles Hard fault interrupt.
-  */
-void HardFault_Handler(void)
-{
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
-  }
 }
 
 /**

@@ -106,7 +106,7 @@ void USB_DRD_Task(void *argument)
 				const osThreadAttr_t usbHostTask_attributes = {
 						.name = "usbHostTask",
 						.priority = osPriorityHigh,
-						.stack_size = 256 * 4
+						.stack_size = 1024 * 8
 				};
 				usbHostTaskHandle = osThreadNew(USB_Host_Task, NULL, &usbHostTask_attributes);
 		}
@@ -127,7 +127,7 @@ void USB_DRD_Task(void *argument)
 				const osThreadAttr_t usbDeviceTask_attributes = {
 						.name = "usbDeviceTask",
 						.priority = osPriorityNormal,
-						.stack_size = 256 * 4
+						.stack_size = 1024 * 8
 				};
 				usbDeviceTaskHandle = osThreadNew(USB_Device_Task, NULL, &usbDeviceTask_attributes);
 		}
