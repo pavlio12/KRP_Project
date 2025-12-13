@@ -10,6 +10,7 @@
 #include "usbh_def.h"
 #include "usbd_conf.h"   // for hpcd_USB_OTG_HS
 #include "usbh_conf.h"   // for hhcd_USB_OTG_HS
+#include "cmsis_os2.h"
 
 #include "stm32h7xx_hal.h"
 
@@ -30,12 +31,20 @@ extern void (*USBHS_IRQHandler_Func)(void);
 void USBHS_IRQHandler_HOST(void);
 void USBHS_IRQHandler_DEVICE(void);
 
+typedef enum {
+  USB_EVT_CONNECT,
+  USB_EVT_DISCONNECT,
+  USB_EVT_PORT_EN,
+  USB_EVT_PORT_DIS,
+	USB_EVT_VBUS_ON,
+	USB_EVT_VBUS_OFF
+} usb_evt_t;
+extern osMessageQueueId_t g_usbEvtQ;
 
 typedef enum {
     DRD_MODE_DEVICE = 0,
     DRD_MODE_HOST   = 1
 } DRD_Mode_t;
-
 extern volatile DRD_Mode_t g_usb_role;
 extern volatile uint8_t g_role_switch_requested;   // Set by button IRQ
 

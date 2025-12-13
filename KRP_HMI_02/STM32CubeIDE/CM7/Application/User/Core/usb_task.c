@@ -21,6 +21,14 @@
 #include "cmsis_os.h"
 #include "main.h"
 
+osMessageQueueId_t g_usbEvtQ;   // For queuing HMI messages from IRQ callbacks (for processing in usb_task.c thread)
+
+void USB_EventQueue_Init(void)
+{
+    g_usbEvtQ = osMessageQueueNew(8, sizeof(usb_evt_t), NULL);
+    configASSERT(g_usbEvtQ != NULL);
+}
+
 volatile DRD_Mode_t g_usb_role;
 volatile uint8_t g_role_switch_requested = 0;   // Set by button IRQ
 // volatile tells the compiler: This value may change at ANY time, outside normal program flow. Do NOT optimize it!
@@ -71,10 +79,43 @@ void USB_Device_Task(void *argument)
 
 void USB_Host_Task(void *argument)
 {
+	usb_evt_t evt;
 	HMI_setUsbRoleText("Host");
   for (;;) {
-  		/* Use the logging wrapper to see host/enumeration state transitions */
+  		/* Process USB host core */
       MX_USB_HOST_Process();
+
+      /* Handle USB events from ISR */
+			while (osMessageQueueGet(g_usbEvtQ, &evt, NULL, 0) == osOK) {
+					switch (evt) {
+							case USB_EVT_CONNECT:
+									HMI_addSystemMessage("HCD: device detected on root port");
+									break;
+
+							case USB_EVT_DISCONNECT:
+									HMI_addSystemMessage("HCD: device disconnected");
+									break;
+
+							case USB_EVT_PORT_EN:
+									HMI_addSystemMessage("HCD: port enabled");
+									break;
+
+							case USB_EVT_PORT_DIS:
+									HMI_addSystemMessage("HCD: port disabled");
+									break;
+
+							case USB_EVT_VBUS_ON:
+									HMI_addSystemMessage("VBUS drive request: ON");
+									break;
+
+							case USB_EVT_VBUS_OFF:
+									HMI_addSystemMessage("VBUS drive request: OFF");
+									break;
+
+							default:
+									break;
+					}
+			}
       osDelay(1);                   // 1 kHz update rate; Host needs fast polling
   }
 }
@@ -131,6 +172,10 @@ void USB_DRD_Task(void *argument)
 				};
 				usbDeviceTaskHandle = osThreadNew(USB_Device_Task, NULL, &usbDeviceTask_attributes);
 		}
+
+		// Create Message Queue for USB Events (mostly from usbh_conf.c)
+		g_usbEvtQ = osMessageQueueNew(8, sizeof(usb_evt_t), NULL);
+		configASSERT(g_usbEvtQ != NULL);
 
 		// ---- DRD monitoring loop ----
     for (;;)

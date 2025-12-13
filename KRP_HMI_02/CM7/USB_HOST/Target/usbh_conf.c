@@ -22,7 +22,9 @@
 #include "usbh_core.h"
 
 /* USER CODE BEGIN Includes */
-#include "hmiBridge.h"
+#include "main.h"
+#include "usb_task.h"
+// #include "hmiBridge.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,7 +40,13 @@ HCD_HandleTypeDef hhcd_USB_OTG_HS;
 void Error_Handler(void);
 
 /* USER CODE BEGIN 0 */
+extern osMessageQueueId_t g_usbEvtQ;
 
+static inline void post_evt_from_isr(usb_evt_t e) {
+	// Enqueues a small enum value into a message queue.
+	if (g_usbEvtQ == NULL) return;
+  osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
+}
 /* USER CODE END 0 */
 
 /* USER CODE BEGIN PFP */
@@ -220,7 +228,8 @@ void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: device detected on root port");
+	post_evt_from_isr(USB_EVT_CONNECT);
+  //HMI_addSystemMessage("HCD: device detected on root port");
   USBH_LL_Connect(hhcd->pData);
 }
 
@@ -231,7 +240,8 @@ void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: device removed from root port");
+	post_evt_from_isr(USB_EVT_DISCONNECT);
+  //HMI_addSystemMessage("HCD: device removed from root port");
   USBH_LL_Disconnect(hhcd->pData);
 }
 
@@ -256,7 +266,8 @@ void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t chnum,
   */
 void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: port enabled (link up)");
+	post_evt_from_isr(USB_EVT_PORT_EN);
+  // HMI_addSystemMessage("HCD: port enabled (link up)");
   USBH_LL_PortEnabled(hhcd->pData);
 }
 
@@ -267,7 +278,8 @@ void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd)
   */
 void HAL_HCD_PortDisabled_Callback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: port disabled (link down)");
+	post_evt_from_isr(USB_EVT_PORT_DIS);
+  //HMI_addSystemMessage("HCD: port disabled (link down)");
   USBH_LL_PortDisabled(hhcd->pData);
 }
 
@@ -537,10 +549,12 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
     last_vbus_state = state;
     if (state == 0U)
     {
+    	// post_evt_from_isr(USB_EVT_VBUS_OFF);
       HMI_addSystemMessage("VBUS drive request: OFF");
     }
     else
     {
+    	// post_evt_from_isr(USB_EVT_VBUS_ON);
       HMI_addSystemMessage("VBUS drive request: ON");
     }
   }
@@ -565,7 +579,7 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
       /* USER CODE END DRIVE_LOW_CHARGE_FOR_HS */
     }
   }
-  HAL_Delay(200);
+  // HAL_Delay(200);
   return USBH_OK;
 }
 

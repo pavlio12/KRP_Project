@@ -20,9 +20,12 @@ static inline uint32_t now_ms(void) { return osKernelGetTickCount(); }
 
 extern USBD_HandleTypeDef hUsbDeviceHS;
 
+// The aligned(4) attribute tells the linker and compiler to
+// Place the start address of buf at an address that is a multiple of 4 bytes.
 static __attribute__((aligned(4))) uint8_t txbuf[64];
-static uint8_t rxbuf[64];
+static __attribute__((aligned(4))) uint8_t rxbuf[64];
 static char msg[64];
+
 static bool hb_pending = false;
 static uint16_t hb_len = 0;
 static uint32_t last_tx_attempt = 0;
@@ -115,13 +118,10 @@ void usb_eval_transitions(void) {
     }
 
     // Emit TX/RX pulses for the plot without changing link state
-    if (g_usb.activity.tx_done) { // TX pulse
+    const bool tx_pulse = g_usb.activity.tx_done;
+    const bool rx_pulse = g_usb.activity.rx_ready;
+    if (tx_pulse || rx_pulse) {
         hmi_updated = true;
-        g_usb.activity.tx_done = false;
-    }
-    if (g_usb.activity.rx_ready) { // RX pulse
-        hmi_updated = true;
-        g_usb.activity.rx_ready = false;
     }
 
     if (hmi_updated) {
@@ -129,6 +129,9 @@ void usb_eval_transitions(void) {
     	HMI_addUsbStateGraphPoint(USB_GetStateID());
     }
 
+    // Clear pulses after rendering so they stay visible for this frame
+    g_usb.activity.tx_done = false;
+    g_usb.activity.rx_ready = false;
 
 }
 

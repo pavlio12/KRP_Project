@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+
 void HMI_setUsbStateText(const char* msg);
 void HMI_setUsbRoleText(const char* msg);
 

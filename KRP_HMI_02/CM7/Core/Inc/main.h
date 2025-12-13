@@ -52,7 +52,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+// osMessageQueueId_t g_usbEvtQ; // For displaying HMI messages from IRQ callbacks
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
