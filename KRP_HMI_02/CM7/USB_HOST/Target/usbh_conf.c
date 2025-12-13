@@ -45,6 +45,7 @@ extern osMessageQueueId_t g_usbEvtQ;
 static inline void post_evt_from_isr(usb_evt_t e) {
 	// Enqueues a small enum value into a message queue.
 	if (g_usbEvtQ == NULL) return;
+	if (osKernelGetState() != osKernelRunning) return;
   osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
 }
 /* USER CODE END 0 */
@@ -549,13 +550,13 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
     last_vbus_state = state;
     if (state == 0U)
     {
-    	// post_evt_from_isr(USB_EVT_VBUS_OFF);
-      HMI_addSystemMessage("VBUS drive request: OFF");
+    	post_evt_from_isr(USB_EVT_VBUS_OFF);
+      // HMI_addSystemMessage("VBUS drive request: OFF");
     }
     else
     {
-    	// post_evt_from_isr(USB_EVT_VBUS_ON);
-      HMI_addSystemMessage("VBUS drive request: ON");
+    	post_evt_from_isr(USB_EVT_VBUS_ON);
+      // HMI_addSystemMessage("VBUS drive request: ON");
     }
   }
   /* USER CODE END 0*/
@@ -673,26 +674,31 @@ USBH_StatusTypeDef USBH_Get_USB_Status(HAL_StatusTypeDef hal_status)
 /* USER CODE BEGIN AdditionalCallbacks */
 void HAL_HCD_ConnectCallback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: device detected on root port");
+	post_evt_from_isr(USB_EVT_CONNECT);
+  // HMI_addSystemMessage("HCD: device detected on root port");
 }
 
 void HAL_HCD_DisconnectCallback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: device removed from root port");
+	post_evt_from_isr(USB_EVT_DISCONNECT);
+  // HMI_addSystemMessage("HCD: device removed from root port");
 }
 
 void HAL_HCD_PortEnabledCallback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: port enabled (link up)");
+	post_evt_from_isr(USB_EVT_PORT_EN);
+  // HMI_addSystemMessage("HCD: port enabled (link up)");
 }
 
 void HAL_HCD_PortDisabledCallback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: port disabled (link down)");
+	post_evt_from_isr(USB_EVT_PORT_DIS);
+  // HMI_addSystemMessage("HCD: port disabled (link down)");
 }
 
 void HAL_HCD_PortResetCallback(HCD_HandleTypeDef *hhcd)
 {
-  HMI_addSystemMessage("HCD: port reset issued");
+	post_evt_from_isr(USB_EVT_PORT_RESET);
+  // HMI_addSystemMessage("HCD: port reset issued");
 }
 /* USER CODE END AdditionalCallbacks */

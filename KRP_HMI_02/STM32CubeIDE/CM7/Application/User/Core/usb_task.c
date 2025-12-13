@@ -104,6 +104,10 @@ void USB_Host_Task(void *argument)
 									HMI_addSystemMessage("HCD: port disabled");
 									break;
 
+							case USB_EVT_PORT_RESET:
+									HMI_addSystemMessage("HCD: port reset");
+									break;
+
 							case USB_EVT_VBUS_ON:
 									HMI_addSystemMessage("VBUS drive request: ON");
 									break;
@@ -113,10 +117,11 @@ void USB_Host_Task(void *argument)
 									break;
 
 							default:
+									HMI_addSystemMessage("Unknown Message");
 									break;
 					}
 			}
-      osDelay(1);                   // 1 kHz update rate; Host needs fast polling
+      osDelay(1);  // 1 kHz update rate; Host needs fast polling
   }
 }
 
@@ -124,6 +129,12 @@ void USB_Host_Task(void *argument)
 // USB Dual-Role-Device Task
 void USB_DRD_Task(void *argument)
 {
+		// Allow unaligned accesses: clear UNALIGN_TRP before host init:
+		SCB->CCR &= ~SCB_CCR_UNALIGN_TRP_Msk;
+		__DSB();
+		__ISB();
+
+		// Choose the USB Role based on the Backup Registers
 		DRD_BackupDomainInit();
 		DRD_Mode_t boot_mode = DRD_ReadBootMode();
 
@@ -174,8 +185,7 @@ void USB_DRD_Task(void *argument)
 		}
 
 		// Create Message Queue for USB Events (mostly from usbh_conf.c)
-		g_usbEvtQ = osMessageQueueNew(8, sizeof(usb_evt_t), NULL);
-		configASSERT(g_usbEvtQ != NULL);
+		USB_EventQueue_Init();
 
 		// ---- DRD monitoring loop ----
     for (;;)

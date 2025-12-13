@@ -64,6 +64,12 @@ typedef struct {
   uint32_t lr;
   uint32_t pc;
   uint32_t psr;
+  uint32_t msp;
+  uint32_t psp;
+  uint32_t cfsr;
+  uint32_t hfsr;
+  uint32_t bfar;
+  uint32_t mmfar;
 } HardFaultRegs;
 
 __attribute__((used)) volatile HardFaultRegs g_hardfault_regs;
@@ -77,6 +83,12 @@ __attribute__((used)) static void HardFault_Capture(uint32_t *sp) {
   g_hardfault_regs.lr  = sp[5];
   g_hardfault_regs.pc  = sp[6];
   g_hardfault_regs.psr = sp[7];
+  g_hardfault_regs.msp  = __get_MSP();
+  g_hardfault_regs.psp  = __get_PSP();
+  g_hardfault_regs.cfsr = SCB->CFSR;
+  g_hardfault_regs.hfsr = SCB->HFSR;
+  g_hardfault_regs.bfar = SCB->BFAR;
+  g_hardfault_regs.mmfar = SCB->MMFAR;
   while (1) { __NOP(); }
 }
 
