@@ -82,10 +82,11 @@ void USB_Host_Task(void *argument)
 	usb_evt_t evt;
 	HMI_setUsbRoleText("Host");
   for (;;) {
-  		/* Process USB host core */
+  		// Process USB host core
       MX_USB_HOST_Process();
 
-      /* Handle USB events from ISR */
+      // Handle USB events from ISR
+      /*
 			while (osMessageQueueGet(g_usbEvtQ, &evt, NULL, 0) == osOK) {
 					switch (evt) {
 							case USB_EVT_CONNECT:
@@ -121,6 +122,7 @@ void USB_Host_Task(void *argument)
 									break;
 					}
 			}
+			*/
       osDelay(1);  // 1 kHz update rate; Host needs fast polling
   }
 }
@@ -129,10 +131,13 @@ void USB_Host_Task(void *argument)
 // USB Dual-Role-Device Task
 void USB_DRD_Task(void *argument)
 {
-		// Allow unaligned accesses: clear UNALIGN_TRP before host init:
+		// Allow unaligned accesses - clear UNALIGN_TRP before host init.
+	  // It only hides the problem, not fixes it!!!
+		/*
 		SCB->CCR &= ~SCB_CCR_UNALIGN_TRP_Msk;
 		__DSB();
 		__ISB();
+		*/
 
 		// Choose the USB Role based on the Backup Registers
 		DRD_BackupDomainInit();

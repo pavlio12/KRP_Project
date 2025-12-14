@@ -567,12 +567,23 @@ static USBH_StatusTypeDef USBH_ParseEPDesc(USBH_HandleTypeDef *phost, USBH_EpDes
 {
   USBH_StatusTypeDef status = USBH_OK;
 
-  ep_descriptor->bLength          = *(uint8_t *)(buf + 0U);
-  ep_descriptor->bDescriptorType  = *(uint8_t *)(buf + 1U);
-  ep_descriptor->bEndpointAddress = *(uint8_t *)(buf + 2U);
-  ep_descriptor->bmAttributes     = *(uint8_t *)(buf + 3U);
-  ep_descriptor->wMaxPacketSize   = LE16(buf + 4U);
-  ep_descriptor->bInterval        = *(uint8_t *)(buf + 6U);
+  // Original USBH implementation: (KEEP IT HERE!)
+  /*
+	ep_descriptor->bLength          = *(uint8_t *)(buf + 0U);
+	ep_descriptor->bDescriptorType  = *(uint8_t *)(buf + 1U);
+	ep_descriptor->bEndpointAddress = *(uint8_t *)(buf + 2U);
+	ep_descriptor->bmAttributes     = *(uint8_t *)(buf + 3U);
+	ep_descriptor->wMaxPacketSize   = LE16(buf + 4U);
+	ep_descriptor->bInterval        = *(uint8_t *)(buf + 6U);
+	*/
+
+  // Safe byte-wise parsing to avoid unaligned halfword access on 7-byte EP descriptors
+  ep_descriptor->bLength            = buf[0];
+  ep_descriptor->bDescriptorType    = buf[1];
+  ep_descriptor->bEndpointAddress   = buf[2];
+  ep_descriptor->bmAttributes       = buf[3];
+  ep_descriptor->wMaxPacketSize     = (uint16_t)buf[4] | ((uint16_t)buf[5] << 8);
+  ep_descriptor->bInterval          = buf[6];
 
   /* Make sure that wMaxPacketSize is different from 0 */
   if ((ep_descriptor->wMaxPacketSize == 0x00U) ||
@@ -1155,7 +1166,6 @@ static USBH_StatusTypeDef USBH_HandleControl(USBH_HandleTypeDef *phost)
 /**
   * @}
   */
-
 
 
 

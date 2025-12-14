@@ -43,10 +43,12 @@ void Error_Handler(void);
 extern osMessageQueueId_t g_usbEvtQ;
 
 static inline void post_evt_from_isr(usb_evt_t e) {
+	return;
+	/* Try to remove this for now - does it fuck up the Host enumeration?*/
 	// Enqueues a small enum value into a message queue.
-	if (g_usbEvtQ == NULL) return;
-	if (osKernelGetState() != osKernelRunning) return;
-  osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
+	// if (g_usbEvtQ == NULL) return;
+	// if (osKernelGetState() != osKernelRunning) return;
+  // osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
 }
 /* USER CODE END 0 */
 
@@ -158,7 +160,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(OTG_HS_IRQn, 5, 0);
+    HAL_NVIC_SetPriority(OTG_HS_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
   /* USER CODE BEGIN USB_OTG_HS_MspInit 1 */
 
