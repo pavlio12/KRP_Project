@@ -55,7 +55,7 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  */
 /* USER CODE BEGIN 0 */
 
-#define USB_ENUM_STALL_TIMEOUT 20000U   // [ms]
+#define USB_ENUM_STALL_TIMEOUT 20000U    // [ms] recovery trigger (only when control idle)
 
 static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed)
 {
@@ -394,7 +394,7 @@ void MX_USB_HOST_Process(void)
     else
     {
       if ((enum_stuck_reported == 0U) && (enum_stuck_since != 0U) &&
-          ((now - enum_stuck_since) > 250U))
+          ((now - enum_stuck_since) > 3000U)) // 3 seconds
       {
         log_enum_stuck_detail(now - enum_stuck_since);
         enum_stuck_reported = 1U;
@@ -405,32 +405,28 @@ void MX_USB_HOST_Process(void)
     {
       enum_state_enter_ms = now;
     }
+    /* Gated recovery: only reset port if control engine is idle */
     if ((now - enum_state_enter_ms) > USB_ENUM_STALL_TIMEOUT)
     {
-    	// Enumeration stalls for too long!
-    	enum_state_enter_ms = now;
+      if ((hUsbHostHS.RequestState == CMD_SEND) &&
+          ((hUsbHostHS.Control.state == CTRL_IDLE) || (hUsbHostHS.Control.state == CTRL_COMPLETE)))
+      {
+        enum_state_enter_ms = now;
 
-    	// Log the details on screen
-			char msg[96];
-    	USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
-    	USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
-    	snprintf(msg, sizeof(msg),
-    					"Enum watchdog: state=%s req=%d ctrl=%d urb_out=%d urb_in=%d err=%d",
-							usb_enum_state_to_str(hUsbHostHS.EnumState),
-							hUsbHostHS.RequestState,
-							hUsbHostHS.Control.state,
-							urb_out, urb_in,
-							hUsbHostHS.Control.errorcount);
-    	HMI_addSystemMessage(msg);
+        USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
+        USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
+        char msg[96];
+        snprintf(msg, sizeof(msg),
+                 "Enum recovery: state=%s req=%d ctrl=%d urb_out=%d urb_in=%d err=%d -> port reset",
+                 usb_enum_state_to_str(hUsbHostHS.EnumState),
+                 hUsbHostHS.RequestState,
+                 hUsbHostHS.Control.state,
+                 urb_out, urb_in,
+                 hUsbHostHS.Control.errorcount);
+        HMI_addSystemMessage(msg);
 
-    	/*
-      snprintf(msg, sizeof(msg), "Enum watchdog: stuck in %s, forcing port reset",
-               usb_enum_state_to_str(hUsbHostHS.EnumState));
-      HMI_addSystemMessage(msg);
-      */
-
-      // ReEnumerate USB
-      (void)USBH_ReEnumerate(&hUsbHostHS);
+        (void)USBH_LL_ResetPort(&hUsbHostHS);
+      }
     }
   }
 }

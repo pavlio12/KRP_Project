@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbh_core.h"
+#include "usbh_conf.h"
 
 /* USER CODE BEGIN Includes */
 #include "main.h"
@@ -36,6 +37,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 static uint8_t last_vbus_state = 0xFF;
+volatile uint32_t sof_cnt = 0; // Temporary SOF counter for debugging
 /* USER CODE END PV */
 
 HCD_HandleTypeDef hhcd_USB_OTG_HS;
@@ -46,11 +48,13 @@ extern osMessageQueueId_t g_usbEvtQ;
 
 static inline void post_evt_from_isr(usb_evt_t e) {
 	return;
+	/*
 	// Try to remove this for now - does it fuck up the Host enumeration?
 	// Enqueues a small enum value into a message queue.
-	// if (g_usbEvtQ == NULL) return;
-	// if (osKernelGetState() != osKernelRunning) return;
-  // osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
+	if (g_usbEvtQ == NULL) return;
+	if (osKernelGetState() != osKernelRunning) return;
+  osMessageQueuePut(g_usbEvtQ, &e, 0, 0); // CMSIS-RTOS2 allows ISR put if supported by backend
+  */
 }
 /* USER CODE END 0 */
 
@@ -150,13 +154,6 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     GPIO_InitStruct.Alternate = GPIO_AF10_OTG2_HS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF12_OTG2_FS;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
     /* Peripheral clock enable */
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
@@ -223,6 +220,7 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hcdHandle)
   */
 void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hhcd)
 {
+  sof_cnt++;
   USBH_LL_IncTimer(hhcd->pData);
 }
 
@@ -454,6 +452,14 @@ USBH_StatusTypeDef USBH_LL_OpenPipe(USBH_HandleTypeDef *phost, uint8_t pipe_num,
 
   usb_status = USBH_Get_USB_Status(hal_status);
 
+  if (usb_status != USBH_OK)
+  {
+    char msg[96];
+    snprintf(msg, sizeof(msg), "LL_OpenPipe fail pipe=%u ep=0x%02X addr=%u type=%u mps=%u err=%d",
+             pipe_num, epnum, dev_address, ep_type, (unsigned)mps, hal_status);
+    HMI_addSystemMessage(msg);
+  }
+
   return usb_status;
 }
 
@@ -514,6 +520,14 @@ USBH_StatusTypeDef USBH_LL_SubmitURB(USBH_HandleTypeDef *phost, uint8_t pipe, ui
                                         do_ping);
   usb_status =  USBH_Get_USB_Status(hal_status);
 
+  if (usb_status != USBH_OK)
+  {
+    char msg[112];
+    snprintf(msg, sizeof(msg), "SubmitURB fail pipe=%u dir=%u type=%u tok=%u len=%u hal=%d usb=%d",
+             pipe, direction, ep_type, token, (unsigned)length, hal_status, usb_status);
+    HMI_addSystemMessage(msg);
+  }
+
   return usb_status;
 }
 
@@ -551,7 +565,7 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
   /* USER CODE BEGIN 0 */
   if (state != last_vbus_state)
   {
-    last_vbus_state = state;
+    // last_vbus_state = state;
     if (state == 0U)
     {
     	post_evt_from_isr(USB_EVT_VBUS_OFF);
@@ -584,7 +598,10 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
       /* USER CODE END DRIVE_LOW_CHARGE_FOR_HS */
     }
   }
-  USBH_Delay(200);
+  if (state != last_vbus_state) {
+    last_vbus_state = state;
+    USBH_Delay(100); // only when state changes
+  }
   return USBH_OK;
 }
 
@@ -716,6 +733,10 @@ void HAL_HCD_PortResetCallback(HCD_HandleTypeDef *hhcd)
 
 void USBH_Log_To_HMI(const char *prefix, const char *fmt, ...)
 {
+	return;
+	/*
+	if ((SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0) { return; } // in ISR, skip
+
   char msg[192];
   char payload[160];
   va_list args;
@@ -731,6 +752,6 @@ void USBH_Log_To_HMI(const char *prefix, const char *fmt, ...)
   else
   {
     HMI_addSystemMessage(payload);
-  }
+  }*/
 }
 /* USER CODE END AdditionalCallbacks */
