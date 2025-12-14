@@ -589,7 +589,14 @@ static USBH_StatusTypeDef USBH_ParseEPDesc(USBH_HandleTypeDef *phost, USBH_EpDes
   ep_descriptor->bDescriptorType    = buf[1];
   ep_descriptor->bEndpointAddress   = buf[2];
   ep_descriptor->bmAttributes       = buf[3];
-  ep_descriptor->wMaxPacketSize     = (uint16_t)buf[4] | ((uint16_t)buf[5] << 8);
+
+  /* Avoid halfword store on potentially misaligned target */
+  {
+    uint8_t *dst = (uint8_t *)&ep_descriptor->wMaxPacketSize;
+    dst[0] = buf[4];
+    dst[1] = buf[5];
+  }
+
   ep_descriptor->bInterval          = buf[6];
 
   /* Make sure that wMaxPacketSize is different from 0 */
@@ -1173,5 +1180,4 @@ static USBH_StatusTypeDef USBH_HandleControl(USBH_HandleTypeDef *phost)
 /**
   * @}
   */
-
 
