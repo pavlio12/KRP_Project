@@ -24,7 +24,9 @@
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include "usb_task.h"
-// #include "hmiBridge.h"
+#include "cmsis_os2.h"
+#include "hmiBridge.h"
+#include <stdarg.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +46,7 @@ extern osMessageQueueId_t g_usbEvtQ;
 
 static inline void post_evt_from_isr(usb_evt_t e) {
 	return;
-	/* Try to remove this for now - does it fuck up the Host enumeration?*/
+	// Try to remove this for now - does it fuck up the Host enumeration?
 	// Enqueues a small enum value into a message queue.
 	// if (g_usbEvtQ == NULL) return;
 	// if (osKernelGetState() != osKernelRunning) return;
@@ -582,7 +584,7 @@ USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
       /* USER CODE END DRIVE_LOW_CHARGE_FOR_HS */
     }
   }
-  // HAL_Delay(200);
+  USBH_Delay(200);
   return USBH_OK;
 }
 
@@ -640,7 +642,15 @@ uint8_t USBH_LL_GetToggle(USBH_HandleTypeDef *phost, uint8_t pipe)
   */
 void USBH_Delay(uint32_t Delay)
 {
-  HAL_Delay(Delay);
+	// My own modification to NOT use the HAL_Delay if possible
+	if (osKernelGetState() == osKernelRunning)
+	{
+		osDelay(Delay);
+	}
+	else
+	{
+		HAL_Delay(Delay);
+	}
 }
 
 /**
@@ -702,5 +712,25 @@ void HAL_HCD_PortResetCallback(HCD_HandleTypeDef *hhcd)
 {
 	post_evt_from_isr(USB_EVT_PORT_RESET);
   // HMI_addSystemMessage("HCD: port reset issued");
+}
+
+void USBH_Log_To_HMI(const char *prefix, const char *fmt, ...)
+{
+  char msg[192];
+  char payload[160];
+  va_list args;
+  va_start(args, fmt);
+  (void)vsnprintf(payload, sizeof(payload), fmt, args);
+  va_end(args);
+
+  if ((prefix != NULL) && (prefix[0] != '\0'))
+  {
+    (void)snprintf(msg, sizeof(msg), "%s%s", prefix, payload);
+    HMI_addSystemMessage(msg);
+  }
+  else
+  {
+    HMI_addSystemMessage(payload);
+  }
 }
 /* USER CODE END AdditionalCallbacks */

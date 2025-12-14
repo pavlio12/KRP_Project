@@ -577,24 +577,6 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost)
       break;
 
     case HOST_ENUMERATION:
-    	// DEBUG: track control/enum progression without flooding
-			static uint8_t prevReq = 0xFF;
-			static uint8_t prevCtrl = 0xFF;
-			static uint8_t prevEnum = 0xFF;
-			if (phost->RequestState != prevReq ||
-					phost->Control.state != prevCtrl ||
-					phost->EnumState != prevEnum)
-			{
-				char dbg[64];
-				snprintf(dbg, sizeof(dbg), "ENUM: req=%u ctrl=%u enum=%u",
-								 (unsigned)phost->RequestState,
-								 (unsigned)phost->Control.state,
-								 (unsigned)phost->EnumState);
-				HMI_addSystemMessage(dbg);
-				prevReq = phost->RequestState;
-				prevCtrl = phost->Control.state;
-				prevEnum = phost->EnumState;
-			}
       /* Check for enumeration status */
       status = USBH_HandleEnum(phost);
       if (status == USBH_OK)
@@ -1353,4 +1335,3 @@ USBH_StatusTypeDef USBH_LL_NotifyURBChange(USBH_HandleTypeDef *phost)
 /**
   * @}
   */
-

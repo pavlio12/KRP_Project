@@ -188,6 +188,44 @@ static const char* usb_enum_state_to_str(ENUM_StateTypeDef state)
     default:                            return "ENUM_STATE_UNKNOWN";
   }
 }
+
+static void log_enum_stuck_detail(uint32_t elapsed_ms)
+{
+  USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
+  USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
+
+  uint32_t hc_err = 0;
+  uint8_t hc_out_state = 0xFF;
+  uint8_t hc_in_state = 0xFF;
+
+  if (hUsbHostHS.pData != NULL)
+  {
+    HCD_HandleTypeDef *hhcd = (HCD_HandleTypeDef *)hUsbHostHS.pData;
+    hc_err = hhcd->ErrorCode;
+
+    if (hUsbHostHS.Control.pipe_out < 16U)
+    {
+      hc_out_state = (uint8_t)hhcd->hc[hUsbHostHS.Control.pipe_out].state;
+    }
+    if (hUsbHostHS.Control.pipe_in < 16U)
+    {
+      hc_in_state = (uint8_t)hhcd->hc[hUsbHostHS.Control.pipe_in].state;
+    }
+  }
+
+  char msg[168];
+  snprintf(msg, sizeof(msg),
+           "ENUM stalled %lums: req=%u ctrl=%u enum=%u urb_out=%d urb_in=%d hc_out=%u hc_in=%u err=0x%lX",
+           (unsigned long)elapsed_ms,
+           (unsigned int)hUsbHostHS.RequestState,
+           (unsigned int)hUsbHostHS.Control.state,
+           (unsigned int)hUsbHostHS.EnumState,
+           urb_out, urb_in,
+           (unsigned int)hc_out_state,
+           (unsigned int)hc_in_state,
+           (unsigned long)hc_err);
+  HMI_addSystemMessage(msg);
+}
 /* USER CODE END 0 */
 
 /*
@@ -205,6 +243,7 @@ static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, cons
 static void log_connected_device_info(USBH_HandleTypeDef *phost);
 static const char* usb_host_state_to_str(HOST_StateTypeDef state);
 static const char* usb_enum_state_to_str(ENUM_StateTypeDef state);
+static void log_enum_stuck_detail(uint32_t elapsed_ms);
 /* USER CODE END 1 */
 
 /**
@@ -288,6 +327,12 @@ void MX_USB_HOST_Process(void)
   static HOST_StateTypeDef last_host_state = (HOST_StateTypeDef)(-1);
   static ENUM_StateTypeDef last_enum_state = (ENUM_StateTypeDef)(-1);
   static uint32_t enum_state_enter_ms = 0;
+  static uint8_t reset_enum_debug = 0U;
+  static uint8_t prev_req = 0xFF;
+  static uint8_t prev_ctrl = 0xFF;
+  static uint8_t prev_enum = 0xFF;
+  static uint32_t enum_stuck_since = 0U;
+  static uint8_t enum_stuck_reported = 0U;
 
   if (hUsbHostHS.gState != last_host_state)
   {
@@ -295,6 +340,8 @@ void MX_USB_HOST_Process(void)
     char msg[64];
     snprintf(msg, sizeof(msg), "USBH state -> %s", usb_host_state_to_str(last_host_state));
     HMI_addSystemMessage(msg);
+
+    reset_enum_debug = (last_host_state == HOST_ENUMERATION) ? 1U : 0U;
   }
 
   if (hUsbHostHS.EnumState != last_enum_state)
@@ -314,6 +361,46 @@ void MX_USB_HOST_Process(void)
   if (hUsbHostHS.gState == HOST_ENUMERATION)
   {
     uint32_t now = HAL_GetTick();
+
+    if (reset_enum_debug != 0U)
+    {
+      prev_req = 0xFF;
+      prev_ctrl = 0xFF;
+      prev_enum = 0xFF;
+      enum_stuck_since = now;
+      enum_stuck_reported = 0U;
+      reset_enum_debug = 0U;
+    }
+
+    uint8_t changed = (hUsbHostHS.RequestState != prev_req) ||
+                      (hUsbHostHS.Control.state != prev_ctrl) ||
+                      (hUsbHostHS.EnumState != prev_enum);
+
+    if (changed != 0U)
+    {
+      char dbg[64];
+      snprintf(dbg, sizeof(dbg), "ENUM: req=%u ctrl=%u enum=%u",
+               (unsigned)hUsbHostHS.RequestState,
+               (unsigned)hUsbHostHS.Control.state,
+               (unsigned)hUsbHostHS.EnumState);
+      HMI_addSystemMessage(dbg);
+
+      prev_req = hUsbHostHS.RequestState;
+      prev_ctrl = hUsbHostHS.Control.state;
+      prev_enum = hUsbHostHS.EnumState;
+      enum_stuck_since = now;
+      enum_stuck_reported = 0U;
+    }
+    else
+    {
+      if ((enum_stuck_reported == 0U) && (enum_stuck_since != 0U) &&
+          ((now - enum_stuck_since) > 250U))
+      {
+        log_enum_stuck_detail(now - enum_stuck_since);
+        enum_stuck_reported = 1U;
+      }
+    }
+
     if (enum_state_enter_ms == 0)
     {
       enum_state_enter_ms = now;
@@ -387,4 +474,3 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 /**
   * @}
   */
-

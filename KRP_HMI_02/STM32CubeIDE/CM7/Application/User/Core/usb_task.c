@@ -86,7 +86,6 @@ void USB_Host_Task(void *argument)
       MX_USB_HOST_Process();
 
       // Handle USB events from ISR
-      /*
 			while (osMessageQueueGet(g_usbEvtQ, &evt, NULL, 0) == osOK) {
 					switch (evt) {
 							case USB_EVT_CONNECT:
@@ -122,8 +121,7 @@ void USB_Host_Task(void *argument)
 									break;
 					}
 			}
-			*/
-      osDelay(1);  // 1 kHz update rate; Host needs fast polling
+      osDelay(2);  // update rate; Host needs fast polling
   }
 }
 
@@ -162,7 +160,7 @@ void USB_DRD_Task(void *argument)
 				// 3) Create Host task
 				const osThreadAttr_t usbHostTask_attributes = {
 						.name = "usbHostTask",
-						.priority = osPriorityHigh,
+						.priority = osPriorityNormal,
 						.stack_size = 1024 * 8
 				};
 				usbHostTaskHandle = osThreadNew(USB_Host_Task, NULL, &usbHostTask_attributes);

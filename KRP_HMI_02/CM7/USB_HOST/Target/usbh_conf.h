@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+#include "hmiBridge.h"
 
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
@@ -127,8 +128,7 @@
 
 #if (USBH_DEBUG_LEVEL > 0U)
 #define  USBH_UsrLog(...)   do { \
-                            printf(__VA_ARGS__); \
-                            printf("\n"); \
+                            USBH_Log_To_HMI("", __VA_ARGS__); \
 } while (0)
 #else
 #define USBH_UsrLog(...) do {} while (0)
@@ -137,9 +137,7 @@
 #if (USBH_DEBUG_LEVEL > 1U)
 
 #define  USBH_ErrLog(...) do { \
-                            printf("ERROR: "); \
-                            printf(__VA_ARGS__); \
-                            printf("\n"); \
+                            USBH_Log_To_HMI("ERROR: ", __VA_ARGS__); \
 } while (0)
 #else
 #define USBH_ErrLog(...) do {} while (0)
@@ -147,13 +145,13 @@
 
 #if (USBH_DEBUG_LEVEL > 2U)
 #define  USBH_DbgLog(...)   do { \
-                            printf("DEBUG : "); \
-                            printf(__VA_ARGS__); \
-                            printf("\n"); \
+                            USBH_Log_To_HMI("DEBUG: ", __VA_ARGS__); \
 } while (0)
 #else
 #define USBH_DbgLog(...) do {} while (0)
 #endif
+
+void USBH_Log_To_HMI(const char *prefix, const char *fmt, ...);
 
 /**
   * @}

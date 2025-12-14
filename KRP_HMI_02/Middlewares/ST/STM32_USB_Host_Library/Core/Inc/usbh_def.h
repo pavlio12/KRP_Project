@@ -279,7 +279,15 @@ typedef struct _EndpointDescriptor
   uint16_t  wMaxPacketSize;     /* Maximum Packet Size this endpoint is capable of sending or receiving */
   uint8_t   bInterval;          /* is used to specify the polling interval of certain transfers. */
 }
+#if defined ( __GNUC__ )
+__attribute__((aligned(4))) USBH_EpDescTypeDef;
+#elif defined ( __ICCARM__ )
+#pragma data_alignment=4
 USBH_EpDescTypeDef;
+#pragma data_alignment=1
+#else
+__attribute__((aligned(4))) USBH_EpDescTypeDef;
+#endif
 
 typedef struct _InterfaceDescriptor
 {
@@ -515,5 +523,3 @@ typedef struct _USBH_HandleTypeDef
 #endif
 
 #endif /* USBH_DEF_H */
-
-

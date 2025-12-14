@@ -567,6 +567,13 @@ static USBH_StatusTypeDef USBH_ParseEPDesc(USBH_HandleTypeDef *phost, USBH_EpDes
 {
   USBH_StatusTypeDef status = USBH_OK;
 
+  /* Guard against misaligned destination pointer to avoid unaligned halfword writes */
+  if ((((uintptr_t)ep_descriptor) & 0x3U) != 0U)
+  {
+    USBH_ErrLog("Endpoint descriptor pointer misaligned: 0x%lX", (unsigned long)ep_descriptor);
+    return USBH_NOT_SUPPORTED;
+  }
+
   // Original USBH implementation: (KEEP IT HERE!)
   /*
 	ep_descriptor->bLength          = *(uint8_t *)(buf + 0U);
@@ -1166,6 +1173,5 @@ static USBH_StatusTypeDef USBH_HandleControl(USBH_HandleTypeDef *phost)
 /**
   * @}
   */
-
 
 
