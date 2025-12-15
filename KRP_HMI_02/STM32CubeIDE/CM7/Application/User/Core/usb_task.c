@@ -42,6 +42,8 @@ extern USBH_HandleTypeDef hUsbHostHS;
 
 void USBHS_IRQHandler_HOST(void)
 {
+    static volatile uint32_t hs_irq_hits = 0;
+    hs_irq_hits++;
     HAL_HCD_IRQHandler(&hhcd_USB_OTG_HS);
 }
 
@@ -273,5 +275,4 @@ void display_USB_state(bool force_update) {
 	HMI_addUsbStateGraphPoint(USB_GetStateID());
 
 }
-
 

@@ -452,6 +452,15 @@ USBH_StatusTypeDef USBH_LL_OpenPipe(USBH_HandleTypeDef *phost, uint8_t pipe_num,
 
   usb_status = USBH_Get_USB_Status(hal_status);
 
+  /* Debug: log successes too for control pipes during bring-up */
+  if ((ep_type == USBH_EP_CONTROL) && (usb_status == USBH_OK))
+  {
+    char msg[96];
+    snprintf(msg, sizeof(msg), "OpenPipe ok pipe=%u ep=0x%02X addr=%u mps=%u",
+             pipe_num, epnum, dev_address, (unsigned)mps);
+    HMI_addSystemMessage(msg);
+  }
+
   if (usb_status != USBH_OK)
   {
     char msg[96];
@@ -520,11 +529,11 @@ USBH_StatusTypeDef USBH_LL_SubmitURB(USBH_HandleTypeDef *phost, uint8_t pipe, ui
                                         do_ping);
   usb_status =  USBH_Get_USB_Status(hal_status);
 
-  if (usb_status != USBH_OK)
+  if ((ep_type == USBH_EP_CONTROL))
   {
-    char msg[112];
-    snprintf(msg, sizeof(msg), "SubmitURB fail pipe=%u dir=%u type=%u tok=%u len=%u hal=%d usb=%d",
-             pipe, direction, ep_type, token, (unsigned)length, hal_status, usb_status);
+    char msg[128];
+    snprintf(msg, sizeof(msg), "SubmitURB ctrl pipe=%u dir=%u tok=%u len=%u hal=%d usb=%d",
+             pipe, direction, token, (unsigned)length, hal_status, usb_status);
     HMI_addSystemMessage(msg);
   }
 

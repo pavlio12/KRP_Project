@@ -31,6 +31,7 @@
 /* USER CODE BEGIN Includes */
 #include "hmiBridge.h"
 #include "usbh_ctlreq.h"
+#include "stm32h7xx_ll_usb.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -197,6 +198,14 @@ static void log_enum_stuck_detail(uint32_t elapsed_ms)
   uint32_t hc_err = 0;
   uint8_t hc_out_state = 0xFF;
   uint8_t hc_in_state = 0xFF;
+  uint32_t hprt = 0;
+  uint32_t haint = 0;
+  uint32_t gintsts = 0;
+  uint32_t hcfg = 0;
+  uint32_t gahbcfg = 0;
+  uint32_t gotgctl = 0;
+  uint32_t usb_base = 0;
+  uint32_t hcd_state = 0;
 
   if (hUsbHostHS.pData != NULL)
   {
@@ -211,20 +220,50 @@ static void log_enum_stuck_detail(uint32_t elapsed_ms)
     {
       hc_in_state = (uint8_t)hhcd->hc[hUsbHostHS.Control.pipe_in].state;
     }
+
+    /* Read host/global registers directly from the current instance base */
+    USB_OTG_GlobalTypeDef *USBx = hhcd->Instance;
+    usb_base = (uint32_t)USBx;
+    hcd_state = (uint32_t)hhcd->State;
+    if (USBx != NULL)
+    {
+      gotgctl = *(__IO uint32_t *)(usb_base + 0x000U);                   /* GOTGCTL */
+      gahbcfg = *(__IO uint32_t *)(usb_base + 0x008U);                   /* GAHBCFG */
+      hprt    = *(__IO uint32_t *)(usb_base + USB_OTG_HOST_PORT_BASE);   /* HPRT */
+      hcfg    = *(__IO uint32_t *)(usb_base + USB_OTG_HOST_BASE + 0x00U);/* HCFG */
+      haint   = *(__IO uint32_t *)(usb_base + USB_OTG_HOST_BASE + 0x14U);/* HAINT */
+      gintsts = USBx->GINTSTS;                                           /* GINTSTS */
+    }
   }
 
-  char msg[168];
+  char msg[256];
+  // We switch the message order because the messages are prepend, not append
+  // Third message
   snprintf(msg, sizeof(msg),
-           "ENUM stalled %lums: req=%u ctrl=%u enum=%u urb_out=%d urb_in=%d hc_out=%u hc_in=%u err=0x%lX",
-           (unsigned long)elapsed_ms,
-           (unsigned int)hUsbHostHS.RequestState,
-           (unsigned int)hUsbHostHS.Control.state,
-           (unsigned int)hUsbHostHS.EnumState,
-           urb_out, urb_in,
-           (unsigned int)hc_out_state,
-           (unsigned int)hc_in_state,
-           (unsigned long)hc_err);
+								 "...HPRT=0x%08lX HAINT=0x%08lX GINTSTS=0x%08lX",
+								 (unsigned long)hprt,
+								 (unsigned long)haint,
+								 (unsigned long)gintsts);
+	HMI_addSystemMessage(msg);
+
+	// Second message
+  snprintf(msg, sizeof(msg),
+                 "...hc_out=%u hc_in=%u err=0x%lX...",
+                 (unsigned int)hc_out_state,
+                 (unsigned int)hc_in_state,
+                 (unsigned long)hc_err);
   HMI_addSystemMessage(msg);
+
+  // First message
+  snprintf(msg, sizeof(msg),
+								 "ENUM stalled %lums: req=%u ctrl=%u enum=%u urb_out=%d urb_in=%d...",
+								 (unsigned long)elapsed_ms,
+								 (unsigned int)hUsbHostHS.RequestState,
+								 (unsigned int)hUsbHostHS.Control.state,
+								 (unsigned int)hUsbHostHS.EnumState,
+								 urb_out,
+								 urb_in);
+	HMI_addSystemMessage(msg);
 }
 /* USER CODE END 0 */
 
@@ -425,6 +464,8 @@ void MX_USB_HOST_Process(void)
                  hUsbHostHS.Control.errorcount);
         HMI_addSystemMessage(msg);
 
+        /* Temporary debug aid: kick the IRQ handler to see if URBs advance */
+        HAL_HCD_IRQHandler((HCD_HandleTypeDef *)hUsbHostHS.pData);
         (void)USBH_LL_ResetPort(&hUsbHostHS);
       }
     }

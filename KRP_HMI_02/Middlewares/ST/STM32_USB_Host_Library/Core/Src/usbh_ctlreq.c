@@ -362,13 +362,13 @@ static USBH_StatusTypeDef USBH_ParseDevDesc(USBH_HandleTypeDef *phost, uint8_t *
     return USBH_FAIL;
   }
 
-  dev_desc->bLength            = *(uint8_t *)(buf +  0U);
-  dev_desc->bDescriptorType    = *(uint8_t *)(buf +  1U);
-  dev_desc->bcdUSB             = LE16(buf +  2U);
-  dev_desc->bDeviceClass       = *(uint8_t *)(buf +  4U);
-  dev_desc->bDeviceSubClass    = *(uint8_t *)(buf +  5U);
-  dev_desc->bDeviceProtocol    = *(uint8_t *)(buf +  6U);
-  dev_desc->bMaxPacketSize     = *(uint8_t *)(buf +  7U);
+  dev_desc->bLength            = buf[0];
+  dev_desc->bDescriptorType    = buf[1];
+  dev_desc->bcdUSB             = (uint16_t)buf[2] | ((uint16_t)buf[3] << 8);
+  dev_desc->bDeviceClass       = buf[4];
+  dev_desc->bDeviceSubClass    = buf[5];
+  dev_desc->bDeviceProtocol    = buf[6];
+  dev_desc->bMaxPacketSize     = buf[7];
 
   if ((phost->device.speed == (uint8_t)USBH_SPEED_HIGH) ||
       (phost->device.speed == (uint8_t)USBH_SPEED_FULL))
@@ -405,13 +405,13 @@ static USBH_StatusTypeDef USBH_ParseDevDesc(USBH_HandleTypeDef *phost, uint8_t *
   {
     /* For 1st time after device connection, Host may issue only 8 bytes for
     Device Descriptor Length  */
-    dev_desc->idVendor           = LE16(buf +  8U);
-    dev_desc->idProduct          = LE16(buf + 10U);
-    dev_desc->bcdDevice          = LE16(buf + 12U);
-    dev_desc->iManufacturer      = *(uint8_t *)(buf + 14U);
-    dev_desc->iProduct           = *(uint8_t *)(buf + 15U);
-    dev_desc->iSerialNumber      = *(uint8_t *)(buf + 16U);
-    dev_desc->bNumConfigurations = *(uint8_t *)(buf + 17U);
+    dev_desc->idVendor           = (uint16_t)buf[8]  | ((uint16_t)buf[9]  << 8);
+    dev_desc->idProduct          = (uint16_t)buf[10] | ((uint16_t)buf[11] << 8);
+    dev_desc->bcdDevice          = (uint16_t)buf[12] | ((uint16_t)buf[13] << 8);
+    dev_desc->iManufacturer      = buf[14];
+    dev_desc->iProduct           = buf[15];
+    dev_desc->iSerialNumber      = buf[16];
+    dev_desc->bNumConfigurations = buf[17];
   }
 
   return status;
@@ -451,14 +451,17 @@ static USBH_StatusTypeDef USBH_ParseCfgDesc(USBH_HandleTypeDef *phost, uint8_t *
   }
 
   /* Parse configuration descriptor */
-  cfg_desc->bLength             = *(uint8_t *)(buf + 0U);
-  cfg_desc->bDescriptorType     = *(uint8_t *)(buf + 1U);
-  cfg_desc->wTotalLength        = MIN(((uint16_t) LE16(buf + 2U)), ((uint16_t)USBH_MAX_SIZE_CONFIGURATION));
-  cfg_desc->bNumInterfaces      = *(uint8_t *)(buf + 4U);
-  cfg_desc->bConfigurationValue = *(uint8_t *)(buf + 5U);
-  cfg_desc->iConfiguration      = *(uint8_t *)(buf + 6U);
-  cfg_desc->bmAttributes        = *(uint8_t *)(buf + 7U);
-  cfg_desc->bMaxPower           = *(uint8_t *)(buf + 8U);
+  cfg_desc->bLength             = buf[0];
+  cfg_desc->bDescriptorType     = buf[1];
+  {
+    uint16_t total = (uint16_t)buf[2] | ((uint16_t)buf[3] << 8);
+    cfg_desc->wTotalLength = MIN(total, (uint16_t)USBH_MAX_SIZE_CONFIGURATION);
+  }
+  cfg_desc->bNumInterfaces      = buf[4];
+  cfg_desc->bConfigurationValue = buf[5];
+  cfg_desc->iConfiguration      = buf[6];
+  cfg_desc->bmAttributes        = buf[7];
+  cfg_desc->bMaxPower           = buf[8];
 
   if (length > USB_CONFIGURATION_DESC_SIZE)
   {
@@ -1180,4 +1183,3 @@ static USBH_StatusTypeDef USBH_HandleControl(USBH_HandleTypeDef *phost)
 /**
   * @}
   */
-
