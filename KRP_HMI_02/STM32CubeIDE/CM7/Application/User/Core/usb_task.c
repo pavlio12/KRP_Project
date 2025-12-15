@@ -70,6 +70,7 @@ void USB_Device_Task(void *argument)
 		HMI_setUsbStateText(USB_GetStateString());
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
+		osDelay(500);
 		for (;;) {
 				if (g_usb_role == DRD_MODE_DEVICE) {
 						usb_do_actions();       // Do current-state actions
@@ -83,6 +84,8 @@ void USB_Host_Task(void *argument)
 {
 	usb_evt_t evt;
 	HMI_setUsbRoleText("Host");
+
+	osDelay(500);
   for (;;) {
   		// Process USB host core
       MX_USB_HOST_Process();

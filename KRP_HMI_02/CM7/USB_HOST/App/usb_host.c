@@ -58,6 +58,10 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
 
 #define USB_ENUM_STALL_TIMEOUT 20000U    // [ms] recovery trigger (only when control idle)
 
+/* Deferred string descriptor logging state */
+static __ALIGNED(32) uint8_t usb_string_buf[64];
+static uint8_t string_log_stage = 0U; // 0=idle, 1=manufacturer, 2=product, 3=serial
+
 static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed)
 {
   switch (speed)
@@ -95,28 +99,6 @@ static const char* usb_class_to_str(uint8_t class_code)
   }
 }
 
-static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, const char *label)
-{
-  if (index == 0U)
-  {
-    return;
-  }
-
-  uint8_t buffer[64] = {0};
-  if (USBH_Get_StringDesc(phost, index, buffer, sizeof(buffer)) == USBH_OK)
-  {
-    char msg[96];
-    snprintf(msg, sizeof(msg), "%s: %s", label, buffer);
-    HMI_addSystemMessage(msg);
-  }
-  else
-  {
-    char msg[64];
-    snprintf(msg, sizeof(msg), "%s string read failed", label);
-    HMI_addSystemMessage(msg);
-  }
-}
-
 static void log_connected_device_info(USBH_HandleTypeDef *phost)
 {
   const USBH_DevDescTypeDef *dev = &phost->device.DevDesc;
@@ -146,10 +128,6 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
              itf->bInterfaceSubClass, itf->bInterfaceProtocol);
     HMI_addSystemMessage(msg);
   }
-
-  log_string_descriptor(phost, dev->iManufacturer, "Manufacturer");
-  log_string_descriptor(phost, dev->iProduct, "Product");
-  log_string_descriptor(phost, dev->iSerialNumber, "Serial");
 }
 
 static const char* usb_host_state_to_str(HOST_StateTypeDef state)
@@ -278,11 +256,11 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
 /* USER CODE BEGIN 1 */
 static const char* usb_host_speed_to_str(USBH_SpeedTypeDef speed);
 static const char* usb_class_to_str(uint8_t class_code);
-static void log_string_descriptor(USBH_HandleTypeDef *phost, uint8_t index, const char *label);
 static void log_connected_device_info(USBH_HandleTypeDef *phost);
 static const char* usb_host_state_to_str(HOST_StateTypeDef state);
 static const char* usb_enum_state_to_str(ENUM_StateTypeDef state);
 static void log_enum_stuck_detail(uint32_t elapsed_ms);
+static void process_deferred_string_logs(void);
 /* USER CODE END 1 */
 
 /**
@@ -444,32 +422,27 @@ void MX_USB_HOST_Process(void)
     {
       enum_state_enter_ms = now;
     }
-    /* Gated recovery: only reset port if control engine is idle */
+    /* Gated recovery: log but avoid forcing port/IRQ pokes here */
     if ((now - enum_state_enter_ms) > USB_ENUM_STALL_TIMEOUT)
     {
-      if ((hUsbHostHS.RequestState == CMD_SEND) &&
-          ((hUsbHostHS.Control.state == CTRL_IDLE) || (hUsbHostHS.Control.state == CTRL_COMPLETE)))
-      {
-        enum_state_enter_ms = now;
+      enum_state_enter_ms = now;
 
-        USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
-        USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
-        char msg[96];
-        snprintf(msg, sizeof(msg),
-                 "Enum recovery: state=%s req=%d ctrl=%d urb_out=%d urb_in=%d err=%d -> port reset",
-                 usb_enum_state_to_str(hUsbHostHS.EnumState),
-                 hUsbHostHS.RequestState,
-                 hUsbHostHS.Control.state,
-                 urb_out, urb_in,
-                 hUsbHostHS.Control.errorcount);
-        HMI_addSystemMessage(msg);
-
-        /* Temporary debug aid: kick the IRQ handler to see if URBs advance */
-        HAL_HCD_IRQHandler((HCD_HandleTypeDef *)hUsbHostHS.pData);
-        (void)USBH_LL_ResetPort(&hUsbHostHS);
-      }
+      USBH_URBStateTypeDef urb_out = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_out);
+      USBH_URBStateTypeDef urb_in  = USBH_LL_GetURBState(&hUsbHostHS, hUsbHostHS.Control.pipe_in);
+      char msg[112];
+      snprintf(msg, sizeof(msg),
+               "Enum stall timeout: state=%s req=%d ctrl=%d urb_out=%d urb_in=%d err=%d (no forced reset)",
+               usb_enum_state_to_str(hUsbHostHS.EnumState),
+               hUsbHostHS.RequestState,
+               hUsbHostHS.Control.state,
+               urb_out, urb_in,
+               hUsbHostHS.Control.errorcount);
+      HMI_addSystemMessage(msg);
     }
   }
+
+  /* Handle deferred string descriptor logging outside of USBH_UserProcess */
+  process_deferred_string_logs();
 }
 /*
  * user callback definition
@@ -490,6 +463,7 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   case HOST_USER_CLASS_ACTIVE:
 		Appli_state = APPLICATION_READY;
 		HMI_addSystemMessage("USB device enumerated (class ready)");
+    string_log_stage = 1U; // defer string descriptor reads until control pipe is idle
 		log_connected_device_info(phost);
   break;
 
@@ -503,6 +477,95 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   }
   /* USER CODE END CALL_BACK_1 */
 }
+
+/* USER CODE BEGIN 2 */
+static void process_deferred_string_logs(void)
+{
+  if (string_log_stage == 0U)
+  {
+    return;
+  }
+
+  /* Only start a new control request when the engine is idle */
+  if (hUsbHostHS.gState == HOST_ENUMERATION)
+  {
+    return;
+  }
+  if (hUsbHostHS.RequestState != CMD_SEND)
+  {
+    return;
+  }
+  if ((hUsbHostHS.Control.state != CTRL_IDLE) && (hUsbHostHS.Control.state != CTRL_COMPLETE))
+  {
+    return;
+  }
+
+  uint8_t idx = 0U;
+  const char *label = "";
+
+  switch (string_log_stage)
+  {
+    case 1U:
+      idx = hUsbHostHS.device.DevDesc.iManufacturer;
+      label = "Manufacturer";
+      break;
+    case 2U:
+      idx = hUsbHostHS.device.DevDesc.iProduct;
+      label = "Product";
+      break;
+    case 3U:
+      idx = hUsbHostHS.device.DevDesc.iSerialNumber;
+      label = "Serial";
+      break;
+    default:
+      string_log_stage = 0U;
+      return;
+  }
+
+  /* Skip missing string indices */
+  if (idx == 0U)
+  {
+    string_log_stage++;
+    if (string_log_stage > 3U)
+    {
+      string_log_stage = 0U;
+    }
+    return;
+  }
+
+  USBH_StatusTypeDef st = USBH_Get_StringDesc(&hUsbHostHS, idx, usb_string_buf, sizeof(usb_string_buf));
+
+  if (st == USBH_BUSY)
+  {
+    return;
+  }
+
+  if (st == USBH_OK)
+  {
+    char msg[80];
+    snprintf(msg, sizeof(msg), "%s string: %s", label, (char *)usb_string_buf);
+    HMI_addSystemMessage(msg);
+  }
+  else if (st == USBH_NOT_SUPPORTED)
+  {
+    char msg[64];
+    snprintf(msg, sizeof(msg), "%s string not supported", label);
+    HMI_addSystemMessage(msg);
+  }
+  else
+  {
+    char msg[64];
+    snprintf(msg, sizeof(msg), "%s string read failed (%d)", label, st);
+    HMI_addSystemMessage(msg);
+  }
+
+  string_log_stage++;
+  if (string_log_stage > 3U)
+  {
+    string_log_stage = 0U;
+  }
+}
+/* USER CODE END 2 */
 
 /**
   * @}

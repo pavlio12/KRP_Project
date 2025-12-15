@@ -443,8 +443,9 @@ typedef struct
 /* Attached device structure */
 typedef struct
 {
-  uint8_t                           CfgDesc_Raw[USBH_MAX_SIZE_CONFIGURATION];
-  uint8_t                           Data[USBH_MAX_DATA_BUFFER];
+  /* Buffers touched by the OTG HS DMA: align to cache-line to avoid bus faults */
+  __ALIGNED(32) uint8_t             CfgDesc_Raw[USBH_MAX_SIZE_CONFIGURATION];
+  __ALIGNED(32) uint8_t             Data[USBH_MAX_DATA_BUFFER];
   uint8_t                           address;
   uint8_t                           speed;
   uint8_t                           EnumCnt;
