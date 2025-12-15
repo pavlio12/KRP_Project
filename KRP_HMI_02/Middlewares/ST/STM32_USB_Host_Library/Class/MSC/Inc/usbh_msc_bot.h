@@ -106,7 +106,7 @@ typedef union
   } field;
   uint8_t data[31];
 }
-BOT_CBWTypeDef;
+__ALIGNED(32) BOT_CBWTypeDef;
 
 typedef union
 {
@@ -119,11 +119,11 @@ typedef union
   } field;
   uint8_t data[13];
 }
-BOT_CSWTypeDef;
+__ALIGNED(32) BOT_CSWTypeDef;
 
 typedef struct
 {
-  uint32_t                   data[16];
+  __ALIGNED(32) uint32_t     data[16];
   BOT_StateTypeDef           state;
   BOT_StateTypeDef           prev_state;
   BOT_CMDStateTypeDef        cmd_state;
@@ -227,4 +227,3 @@ USBH_StatusTypeDef USBH_MSC_BOT_Error(USBH_HandleTypeDef *phost, uint8_t lun);
 /**
   * @}
   */
-

@@ -73,6 +73,7 @@ EndBSPDependencies */
 /** @defgroup USBH_MSC_SCSI_Private_FunctionPrototypes
   * @{
   */
+static void MSC_CBW_ClearCB(MSC_HandleTypeDef *MSC_Handle);
 /**
   * @}
   */
@@ -90,6 +91,14 @@ EndBSPDependencies */
 /** @defgroup USBH_MSC_SCSI_Private_Functions
   * @{
   */
+
+static void MSC_CBW_ClearCB(MSC_HandleTypeDef *MSC_Handle)
+{
+  for (uint32_t i = 0; i < CBW_CB_LENGTH; i++)
+  {
+    MSC_Handle->hbot.cbw.field.CB[i] = 0U;
+  }
+}
 
 
 /**
@@ -114,7 +123,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_TestUnitReady(USBH_HandleTypeDef *phost,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_OUT;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_CB_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0] = OPCODE_TEST_UNIT_READY;
 
       MSC_Handle->hbot.state = BOT_SEND_CBW;
@@ -157,7 +166,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_ReadCapacity(USBH_HandleTypeDef *phost,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_IN;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_CB_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0]  = OPCODE_READ_CAPACITY10;
 
       MSC_Handle->hbot.state = BOT_SEND_CBW;
@@ -212,7 +221,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Inquiry(USBH_HandleTypeDef *phost, uint8_t lun,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_IN;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0] = OPCODE_INQUIRY;
       MSC_Handle->hbot.cbw.field.CB[1] = (lun << 5);
       MSC_Handle->hbot.cbw.field.CB[2] = 0U;
@@ -284,7 +293,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_RequestSense(USBH_HandleTypeDef *phost,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_IN;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_CB_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0] = OPCODE_REQUEST_SENSE;
       MSC_Handle->hbot.cbw.field.CB[1] = (lun << 5);
       MSC_Handle->hbot.cbw.field.CB[2] = 0U;
@@ -352,7 +361,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Write(USBH_HandleTypeDef *phost,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_OUT;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_CB_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0] = OPCODE_WRITE10;
 
       /* Logical block address */
@@ -412,7 +421,7 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Read(USBH_HandleTypeDef *phost,
       MSC_Handle->hbot.cbw.field.Flags = USB_EP_DIR_IN;
       MSC_Handle->hbot.cbw.field.CBLength = CBW_LENGTH;
 
-      (void)USBH_memset(MSC_Handle->hbot.cbw.field.CB, 0, CBW_CB_LENGTH);
+      MSC_CBW_ClearCB(MSC_Handle);
       MSC_Handle->hbot.cbw.field.CB[0] = OPCODE_READ10;
 
       /* Logical block address */
@@ -464,6 +473,4 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Read(USBH_HandleTypeDef *phost,
 /**
   * @}
   */
-
-
 

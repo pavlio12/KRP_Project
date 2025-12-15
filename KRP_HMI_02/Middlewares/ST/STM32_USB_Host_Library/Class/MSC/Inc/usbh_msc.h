@@ -119,7 +119,7 @@ typedef struct _MSC_Process
   MSC_ErrorTypeDef     error;
   MSC_ReqStateTypeDef  req_state;
   MSC_ReqStateTypeDef  prev_req_state;
-  BOT_HandleTypeDef    hbot;
+  __ALIGNED(32) BOT_HandleTypeDef    hbot;
   MSC_LUNTypeDef       unit[MAX_SUPPORTED_LUN];
   uint16_t             current_lun;
   uint16_t             lun;
@@ -211,6 +211,5 @@ USBH_StatusTypeDef USBH_MSC_Write(USBH_HandleTypeDef *phost, uint8_t lun,
 /**
   * @}
   */
-
 
 
