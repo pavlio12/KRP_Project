@@ -25,6 +25,24 @@ extern "C" void HMI_setUsbStateText(const char* msg)
     }
 }
 
+extern "C" void HMI_setDeviceInfo(const char* msg)
+{
+    auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
+    if (app) {
+        app->getModel().setDeviceInfo(msg);
+        app->getModel().addSystemMessage("Screen1 Device info set");
+    }
+}
+
+extern "C" void HMI_appendDeviceInfo(const char* msg)
+{
+    auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
+    if (app) {
+        app->getModel().appendDeviceInfo(msg);
+        app->getModel().addSystemMessage("Screen1 Device info appended");
+    }
+}
+
 extern "C" void HMI_addSystemMessage(const char* msg)
 {
     if (!msg) {

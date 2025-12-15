@@ -109,16 +109,19 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
            dev->idProduct, (dev->bcdUSB >> 8) & 0xFF, dev->bcdUSB & 0xFF,
            usb_host_speed_to_str(phost->device.speed));
   HMI_addSystemMessage(msg);
+  // HMI_setDeviceInfo(msg);
 
   snprintf(msg, sizeof(msg), "Device class 0x%02X (%s), subclass 0x%02X, protocol 0x%02X",
            dev->bDeviceClass, usb_class_to_str(dev->bDeviceClass), dev->bDeviceSubClass,
            dev->bDeviceProtocol);
   HMI_addSystemMessage(msg);
+  // HMI_appendDeviceInfo(msg);
 
   snprintf(msg, sizeof(msg), "Configuration %u: %u interface(s), %u mA max",
            cfg->bConfigurationValue, cfg->bNumInterfaces,
            (unsigned int)(cfg->bMaxPower * 2U));
   HMI_addSystemMessage(msg);
+  // HMI_appendDeviceInfo(msg);
 
   if (cfg->bNumInterfaces > 0U)
   {
@@ -127,6 +130,7 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
              itf->bInterfaceClass, usb_class_to_str(itf->bInterfaceClass),
              itf->bInterfaceSubClass, itf->bInterfaceProtocol);
     HMI_addSystemMessage(msg);
+    // HMI_appendDeviceInfo(msg);
   }
 }
 
@@ -544,21 +548,24 @@ static void process_deferred_string_logs(void)
 
   if (st == USBH_OK)
   {
-    char msg[80];
+    char msg[90];
     snprintf(msg, sizeof(msg), "%s string: %s", label, (char *)usb_string_buf);
     HMI_addSystemMessage(msg);
+    // HMI_appendDeviceInfo(msg);
   }
   else if (st == USBH_NOT_SUPPORTED)
   {
-    char msg[64];
+    char msg[90];
     snprintf(msg, sizeof(msg), "%s string not supported", label);
     HMI_addSystemMessage(msg);
+    // HMI_appendDeviceInfo(msg);
   }
   else
   {
-    char msg[64];
+    char msg[90];
     snprintf(msg, sizeof(msg), "%s string read failed (%d)", label, st);
     HMI_addSystemMessage(msg);
+    // HMI_appendDeviceInfo(msg);
   }
 
   string_log_stage++;

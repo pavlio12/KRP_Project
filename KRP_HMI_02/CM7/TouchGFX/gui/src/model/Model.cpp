@@ -12,7 +12,10 @@ Model::Model() : modelListener(0)
 {
     sysMsgLog[0] = '\0';
     sysMsgLogLen = 0;
+    devInfoText[0] = '\0';
+    lastDevInfo[0] = '\0';
     addSystemMessage("HMI initialized");
+    setDeviceInfo("No info yet...");
 }
 
 void Model::tick()
@@ -35,10 +38,13 @@ void Model::tick()
 				hasNewUsbState = false;
 		}
 
-		if (hasNewDevInfo && modelListener) {
-				modelListener->setDeviceInfo(devInfoText);
-				hasNewDevInfo = false;
-		}
+    if (hasNewDevInfo) {
+        if (screen1Active && modelListener) {
+            modelListener->setDeviceInfo(devInfoText);
+            hasNewDevInfo = false;
+        }
+        /* If Screen1 is not active, keep hasNewDevInfo set so it will update when Screen1 is shown */
+    }
 
     if (screen2Active && needsFullSysMsgSync && modelListener) {
         modelListener->setSystemMessage(sysMsgLog);
@@ -95,6 +101,40 @@ void Model::setDeviceInfo(const char* msg) {
 	hasLastDevInfo = true;
 }
 
+void Model::appendDeviceInfo(const char* msg) {
+    if (!msg) {
+        return;
+    }
+
+    size_t curLen = strlen(devInfoText);
+    size_t msgLen = strlen(msg);
+    if (msgLen >= DEVINFO_LOG_SIZE) {
+        msgLen = DEVINFO_LOG_SIZE - 1;
+    }
+
+    // Add newline if existing text
+    if (curLen > 0 && curLen < DEVINFO_LOG_SIZE - 1) {
+        devInfoText[curLen++] = '\n';
+    }
+
+    size_t remaining = (DEVINFO_LOG_SIZE - 1 > curLen) ? (DEVINFO_LOG_SIZE - 1 - curLen) : 0;
+    if (msgLen > remaining) {
+        msgLen = remaining;
+    }
+
+    if (msgLen > 0) {
+        memcpy(devInfoText + curLen, msg, msgLen);
+        curLen += msgLen;
+    }
+
+    devInfoText[curLen] = '\0';
+    hasNewDevInfo = true;
+
+    strncpy(lastDevInfo, devInfoText, sizeof(lastDevInfo) - 1);
+    lastDevInfo[sizeof(lastDevInfo) - 1] = '\0';
+    hasLastDevInfo = true;
+}
+
 void Model::addSystemMessage(const char* msg) {
     if (!msg) {
             return;
@@ -145,8 +185,10 @@ void Model::setScreen1Active(bool active)
                 modelListener->setUsbStateText(lastUsbState);
             }
             if (hasLastDevInfo) {
-								modelListener->setDeviceInfo(lastDevInfo);
-						}
+                modelListener->setDeviceInfo(lastDevInfo);
+                /* Ensure UI refreshes even if no new messages arrive */
+                hasNewDevInfo = true;
+            }
         }
     } else {
         // Nothing?

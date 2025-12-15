@@ -74,6 +74,7 @@ EndBSPDependencies */
   * @{
   */
 static void MSC_CBW_ClearCB(MSC_HandleTypeDef *MSC_Handle);
+static void MSC_CopyBytes(uint8_t *dst, const uint8_t *src, uint32_t len);
 /**
   * @}
   */
@@ -97,6 +98,15 @@ static void MSC_CBW_ClearCB(MSC_HandleTypeDef *MSC_Handle)
   for (uint32_t i = 0; i < CBW_CB_LENGTH; i++)
   {
     MSC_Handle->hbot.cbw.field.CB[i] = 0U;
+  }
+}
+
+/* Byte-wise copy to avoid unaligned word stores into packed SCSI inquiry fields */
+static void MSC_CopyBytes(uint8_t *dst, const uint8_t *src, uint32_t len)
+{
+  for (uint32_t i = 0; i < len; i++)
+  {
+    dst[i] = src[i];
   }
 }
 
@@ -256,9 +266,9 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Inquiry(USBH_HandleTypeDef *phost, uint8_t lun,
           inquiry->RemovableMedia = 0U;
         }
 
-        (void)USBH_memcpy(inquiry->vendor_id, &MSC_Handle->hbot.pbuf[8], 8U);
-        (void)USBH_memcpy(inquiry->product_id, &MSC_Handle->hbot.pbuf[16], 16U);
-        (void)USBH_memcpy(inquiry->revision_id, &MSC_Handle->hbot.pbuf[32], 4U);
+        MSC_CopyBytes(inquiry->vendor_id, &MSC_Handle->hbot.pbuf[8], 8U);
+        MSC_CopyBytes(inquiry->product_id, &MSC_Handle->hbot.pbuf[16], 16U);
+        MSC_CopyBytes(inquiry->revision_id, &MSC_Handle->hbot.pbuf[32], 4U);
       }
       break;
 
@@ -473,4 +483,3 @@ USBH_StatusTypeDef USBH_MSC_SCSI_Read(USBH_HandleTypeDef *phost,
 /**
   * @}
   */
-

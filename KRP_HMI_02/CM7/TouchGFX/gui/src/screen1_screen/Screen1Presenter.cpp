@@ -9,12 +9,16 @@ Screen1Presenter::Screen1Presenter(Screen1View& v)
 
 void Screen1Presenter::activate()
 {
-
+	if (model) {
+		model->setScreen1Active(true);
+	}
 }
 
 void Screen1Presenter::deactivate()
 {
-
+	if (model) {
+		model->setScreen1Active(false);
+	}
 }
 
 void Screen1Presenter::setUsbRoleText(const char* msg) {

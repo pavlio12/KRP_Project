@@ -11,6 +11,8 @@ extern "C" {
 
 void HMI_setUsbStateText(const char* msg);
 void HMI_setUsbRoleText(const char* msg);
+void HMI_setDeviceInfo(const char* msg);
+void HMI_appendDeviceInfo(const char* msg);
 
 void HMI_addSystemMessage(const char* msg);
 void HMI_addUsbStateGraphPoint(uint8_t stateValue);

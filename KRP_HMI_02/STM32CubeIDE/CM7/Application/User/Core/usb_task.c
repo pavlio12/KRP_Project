@@ -85,7 +85,7 @@ void USB_Host_Task(void *argument)
 	usb_evt_t evt;
 	HMI_setUsbRoleText("Host");
 
-	osDelay(500);
+	//osDelay(500);
   for (;;) {
   		// Process USB host core
       MX_USB_HOST_Process();
@@ -126,7 +126,7 @@ void USB_Host_Task(void *argument)
 									break;
 					}
 			}
-      osDelay(2);  // update rate; Host needs fast polling
+      osDelay(1);  // update rate; Host needs fast polling
   }
 }
 
