@@ -109,19 +109,19 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
            dev->idProduct, (dev->bcdUSB >> 8) & 0xFF, dev->bcdUSB & 0xFF,
            usb_host_speed_to_str(phost->device.speed));
   HMI_addSystemMessage(msg);
-  // HMI_setDeviceInfo(msg);
+  HMI_setDeviceInfo(msg);
 
   snprintf(msg, sizeof(msg), "Device class 0x%02X (%s), subclass 0x%02X, protocol 0x%02X",
            dev->bDeviceClass, usb_class_to_str(dev->bDeviceClass), dev->bDeviceSubClass,
            dev->bDeviceProtocol);
   HMI_addSystemMessage(msg);
-  // HMI_appendDeviceInfo(msg);
+  HMI_appendDeviceInfo(msg);
 
   snprintf(msg, sizeof(msg), "Configuration %u: %u interface(s), %u mA max",
            cfg->bConfigurationValue, cfg->bNumInterfaces,
            (unsigned int)(cfg->bMaxPower * 2U));
   HMI_addSystemMessage(msg);
-  // HMI_appendDeviceInfo(msg);
+  HMI_appendDeviceInfo(msg);
 
   if (cfg->bNumInterfaces > 0U)
   {
@@ -362,6 +362,7 @@ void MX_USB_HOST_Process(void)
     last_host_state = hUsbHostHS.gState;
     char msg[64];
     snprintf(msg, sizeof(msg), "USBH state -> %s", usb_host_state_to_str(last_host_state));
+    HMI_setUsbStateText(usb_host_state_to_str(last_host_state));
     HMI_addSystemMessage(msg);
 
     reset_enum_debug = (last_host_state == HOST_ENUMERATION) ? 1U : 0U;

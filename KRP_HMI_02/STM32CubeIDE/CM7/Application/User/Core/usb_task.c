@@ -66,6 +66,8 @@ static void DRD_BackupDomainInit(void)
 void USB_Device_Task(void *argument)
 {
 		HMI_setUsbRoleText("Device");
+		HMI_setDeviceInfo("The STM board is the USB Device (CDC Class)");
+
 		g_usb.rxQ = osMessageQueueNew(4, 64, NULL); // 4×64B messages
 		HMI_setUsbStateText(USB_GetStateString());
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
@@ -84,6 +86,7 @@ void USB_Host_Task(void *argument)
 {
 	usb_evt_t evt;
 	HMI_setUsbRoleText("Host");
+	HMI_setDeviceInfo("Waiting for USB Device info...");
 
 	//osDelay(500);
   for (;;) {

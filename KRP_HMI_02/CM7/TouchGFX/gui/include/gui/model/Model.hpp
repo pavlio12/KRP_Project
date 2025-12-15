@@ -46,7 +46,7 @@ protected:
     bool hasLastUsbRole = false;
 
     // USB State Text
-		bool hasNewUsbState = false;
+		bool hasNewUsbState = true;
 		char pendingUsbState[16];
     char lastUsbState[16] = {0};
     bool hasLastUsbState = false;

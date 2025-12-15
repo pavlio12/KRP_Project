@@ -7,10 +7,11 @@
 extern "C" {
 #endif
 
-#define DEBUG_PRINTS 0U // Set to 1U / 0U to Enable / Disable the HMI debug prints
+#define DEBUG_PRINTS 1U // Set to 1U / 0U to Enable / Disable the HMI debug prints
 
 void HMI_setUsbStateText(const char* msg);
 void HMI_setUsbRoleText(const char* msg);
+
 void HMI_setDeviceInfo(const char* msg);
 void HMI_appendDeviceInfo(const char* msg);
 

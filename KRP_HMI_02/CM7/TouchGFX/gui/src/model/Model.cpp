@@ -15,7 +15,6 @@ Model::Model() : modelListener(0)
     devInfoText[0] = '\0';
     lastDevInfo[0] = '\0';
     addSystemMessage("HMI initialized");
-    setDeviceInfo("No info yet...");
 }
 
 void Model::tick()
@@ -38,12 +37,9 @@ void Model::tick()
 				hasNewUsbState = false;
 		}
 
-    if (hasNewDevInfo) {
-        if (screen1Active && modelListener) {
-            modelListener->setDeviceInfo(devInfoText);
-            hasNewDevInfo = false;
-        }
-        /* If Screen1 is not active, keep hasNewDevInfo set so it will update when Screen1 is shown */
+    if (hasNewDevInfo && modelListener) {
+        modelListener->setDeviceInfo(devInfoText);
+        hasNewDevInfo = false;
     }
 
     if (screen2Active && needsFullSysMsgSync && modelListener) {
