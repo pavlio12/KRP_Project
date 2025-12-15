@@ -453,7 +453,7 @@ USBH_StatusTypeDef USBH_LL_OpenPipe(USBH_HandleTypeDef *phost, uint8_t pipe_num,
   usb_status = USBH_Get_USB_Status(hal_status);
 
   /* Debug: log successes too for control pipes during bring-up */
-  if ((ep_type == USBH_EP_CONTROL) && (usb_status == USBH_OK))
+  if ((DEBUG_PRINTS == 1U) && (ep_type == USBH_EP_CONTROL) && (usb_status == USBH_OK))
   {
     char msg[96];
     snprintf(msg, sizeof(msg), "OpenPipe ok pipe=%u ep=0x%02X addr=%u mps=%u",
@@ -461,7 +461,7 @@ USBH_StatusTypeDef USBH_LL_OpenPipe(USBH_HandleTypeDef *phost, uint8_t pipe_num,
     HMI_addSystemMessage(msg);
   }
 
-  if (usb_status != USBH_OK)
+  if ((DEBUG_PRINTS == 1U) && (usb_status != USBH_OK))
   {
     char msg[96];
     snprintf(msg, sizeof(msg), "LL_OpenPipe fail pipe=%u ep=0x%02X addr=%u type=%u mps=%u err=%d",
@@ -529,7 +529,7 @@ USBH_StatusTypeDef USBH_LL_SubmitURB(USBH_HandleTypeDef *phost, uint8_t pipe, ui
                                         do_ping);
   usb_status =  USBH_Get_USB_Status(hal_status);
 
-  if ((ep_type == USBH_EP_CONTROL))
+  if ((DEBUG_PRINTS == 1U) && (ep_type == USBH_EP_CONTROL))
   {
     char msg[128];
     snprintf(msg, sizeof(msg), "SubmitURB ctrl pipe=%u dir=%u tok=%u len=%u hal=%d usb=%d",
@@ -742,25 +742,24 @@ void HAL_HCD_PortResetCallback(HCD_HandleTypeDef *hhcd)
 
 void USBH_Log_To_HMI(const char *prefix, const char *fmt, ...)
 {
-	return;
-	/*
+	if (DEBUG_PRINTS != 1U) return;
 	if ((SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0) { return; } // in ISR, skip
 
-  char msg[192];
-  char payload[160];
-  va_list args;
-  va_start(args, fmt);
-  (void)vsnprintf(payload, sizeof(payload), fmt, args);
-  va_end(args);
+    char msg[192];
+    char payload[160];
+    va_list args;
+    va_start(args, fmt);
+    (void)vsnprintf(payload, sizeof(payload), fmt, args);
+    va_end(args);
 
-  if ((prefix != NULL) && (prefix[0] != '\0'))
-  {
-    (void)snprintf(msg, sizeof(msg), "%s%s", prefix, payload);
-    HMI_addSystemMessage(msg);
-  }
-  else
-  {
-    HMI_addSystemMessage(payload);
-  }*/
+    if ((prefix != NULL) && (prefix[0] != '\0'))
+    {
+        (void)snprintf(msg, sizeof(msg), "%s%s", prefix, payload);
+        HMI_addSystemMessage(msg);
+    }
+    else
+    {
+        HMI_addSystemMessage(payload);
+    }
 }
 /* USER CODE END AdditionalCallbacks */

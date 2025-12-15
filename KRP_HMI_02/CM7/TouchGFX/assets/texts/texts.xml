@@ -6,6 +6,33 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="T_USB_STATE_WILD1" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">Text...</Translation>
+      </Text>
+      <Text Id="T_USB_STATE1" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="T_USB_ROLE_WILD1" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">Text...</Translation>
+      </Text>
+      <Text Id="T_USB_ROLE1" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="T_DEV_INFO_WILD" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">Text...</Translation>
+      </Text>
+      <Text Id="T_DEV_INFO" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_8L8C" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB Device Informatio</Translation>
+      </Text>
+      <Text Id="__SingleUse_GLWW" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB State:</Translation>
+      </Text>
+      <Text Id="__SingleUse_XRVX" Alignment="Center" TypographyId="Default">
+        <Translation Language="GB">USB Role:</Translation>
+      </Text>
       <Text Id="T_USB_STATE_WILD" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">Text...</Translation>
       </Text>
@@ -52,7 +79,7 @@
         <Translation Language="GB">USB State:</Translation>
       </Text>
       <Text Id="T_SYS_MSG_WILD" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">Text.,:_=+-*/\&gt;&lt;()"'!?%</Translation>
+        <Translation Language="GB">Text.,:_=+-*/\&gt;&lt;()"'!?%|&amp;</Translation>
       </Text>
       <Text Id="__SingleUse_SR56" Alignment="Center" TypographyId="Small">
         <Translation Language="GB">Build 07.12.25</Translation>
@@ -64,7 +91,7 @@
         <Translation Language="GB">System Messages</Translation>
       </Text>
       <Text Id="__SingleUse_PUH7" Alignment="Center" TypographyId="Large">
-        <Translation Language="GB">KRP - USB Project</Translation>
+        <Translation Language="GB">USB Overview</Translation>
       </Text>
       <Text Id="__SingleUse_XG94" Alignment="Center" TypographyId="Large">
         <Translation Language="GB">Settings</Translation>

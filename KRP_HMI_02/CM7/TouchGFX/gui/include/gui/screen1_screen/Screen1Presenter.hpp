@@ -23,6 +23,14 @@ public:
      * The deactivate function is called automatically when this screen is "switched out"
      * (ie. made inactive). Teardown functionality can be placed here.
      */
+    void setUsbRoleText(const char* msg);
+		void setUsbStateText(const char* msg);
+
+		void setDeviceInfo(const char* msg);
+
+		void appendDeviceInfo(const char* msg);
+
+
     virtual void deactivate();
 
     virtual ~Screen1Presenter() {}

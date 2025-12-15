@@ -35,6 +35,11 @@ void Model::tick()
 				hasNewUsbState = false;
 		}
 
+		if (hasNewDevInfo && modelListener) {
+				modelListener->setDeviceInfo(devInfoText);
+				hasNewDevInfo = false;
+		}
+
     if (screen2Active && needsFullSysMsgSync && modelListener) {
         modelListener->setSystemMessage(sysMsgLog);
         resetPendingSystemMessages();
@@ -64,18 +69,30 @@ void Model::setUsbRoleText(const char* msg) {
 	strncpy(pendingUsbRole, msg, sizeof(pendingUsbRole) - 1);
 	pendingUsbRole[sizeof(pendingUsbRole) - 1] = '\0';
 	hasNewUsbRole = true;
-    strncpy(lastUsbRole, pendingUsbRole, sizeof(lastUsbRole) - 1);
-    lastUsbRole[sizeof(lastUsbRole) - 1] = '\0';
-    hasLastUsbRole = true;
+
+	strncpy(lastUsbRole, pendingUsbRole, sizeof(lastUsbRole) - 1);
+	lastUsbRole[sizeof(lastUsbRole) - 1] = '\0';
+	hasLastUsbRole = true;
 }
 
 void Model::setUsbStateText(const char* msg) {
 	strncpy(pendingUsbState, msg, sizeof(pendingUsbState) - 1);
 	pendingUsbState[sizeof(pendingUsbState) - 1] = '\0';
 	hasNewUsbState = true;
-    strncpy(lastUsbState, pendingUsbState, sizeof(lastUsbState) - 1);
-    lastUsbState[sizeof(lastUsbState) - 1] = '\0';
-    hasLastUsbState = true;
+
+	strncpy(lastUsbState, pendingUsbState, sizeof(lastUsbState) - 1);
+	lastUsbState[sizeof(lastUsbState) - 1] = '\0';
+	hasLastUsbState = true;
+}
+
+void Model::setDeviceInfo(const char* msg) {
+	strncpy(devInfoText, msg, sizeof(devInfoText) - 1);
+	devInfoText[sizeof(devInfoText) - 1] = '\0';
+	hasNewDevInfo = true;
+
+	strncpy(lastDevInfo, devInfoText, sizeof(lastDevInfo) - 1);
+	lastDevInfo[sizeof(lastDevInfo) - 1] = '\0';
+	hasLastDevInfo = true;
 }
 
 void Model::addSystemMessage(const char* msg) {
@@ -116,6 +133,25 @@ void Model::addUsbStateGraphPoint(uint8_t stateValue) {
 	}
 }
 
+void Model::setScreen1Active(bool active)
+{
+    screen1Active = active;
+    if (active) {
+        if (modelListener) {
+            if (hasLastUsbRole) {
+                modelListener->setUsbRoleText(lastUsbRole);
+            }
+            if (hasLastUsbState) {
+                modelListener->setUsbStateText(lastUsbState);
+            }
+            if (hasLastDevInfo) {
+								modelListener->setDeviceInfo(lastDevInfo);
+						}
+        }
+    } else {
+        // Nothing?
+    }
+}
 void Model::setScreen2Active(bool active)
 {
     screen2Active = active;

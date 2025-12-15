@@ -13,8 +13,6 @@
 #include "cmsis_os2.h"
 
 #include "stm32h7xx_hal.h"
-
-
 // #include "stm32h7xx_hal_pcd.h"
 // #include "stm32h7xx_hal_hcd.h"
 #include <stdbool.h>

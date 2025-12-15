@@ -215,33 +215,35 @@ static void log_enum_stuck_detail(uint32_t elapsed_ms)
   }
 
   char msg[256];
-  // We switch the message order because the messages are prepend, not append
-  // Third message
-  snprintf(msg, sizeof(msg),
-								 "...HPRT=0x%08lX HAINT=0x%08lX GINTSTS=0x%08lX",
-								 (unsigned long)hprt,
-								 (unsigned long)haint,
-								 (unsigned long)gintsts);
-	HMI_addSystemMessage(msg);
+  if (DEBUG_PRINTS == 1U) {
+    // We switch the message order because the messages are prepend, not append
+    // Third message
+    snprintf(msg, sizeof(msg),
+                                    "...HPRT=0x%08lX HAINT=0x%08lX GINTSTS=0x%08lX",
+                                    (unsigned long)hprt,
+                                    (unsigned long)haint,
+                                    (unsigned long)gintsts);
+        HMI_addSystemMessage(msg);
 
-	// Second message
-  snprintf(msg, sizeof(msg),
-                 "...hc_out=%u hc_in=%u err=0x%lX...",
-                 (unsigned int)hc_out_state,
-                 (unsigned int)hc_in_state,
-                 (unsigned long)hc_err);
-  HMI_addSystemMessage(msg);
+        // Second message
+    snprintf(msg, sizeof(msg),
+                    "...hc_out=%u hc_in=%u err=0x%lX...",
+                    (unsigned int)hc_out_state,
+                    (unsigned int)hc_in_state,
+                    (unsigned long)hc_err);
+    HMI_addSystemMessage(msg);
 
-  // First message
-  snprintf(msg, sizeof(msg),
-								 "ENUM stalled %lums: req=%u ctrl=%u enum=%u urb_out=%d urb_in=%d...",
-								 (unsigned long)elapsed_ms,
-								 (unsigned int)hUsbHostHS.RequestState,
-								 (unsigned int)hUsbHostHS.Control.state,
-								 (unsigned int)hUsbHostHS.EnumState,
-								 urb_out,
-								 urb_in);
-	HMI_addSystemMessage(msg);
+    // First message
+    snprintf(msg, sizeof(msg),
+                                    "ENUM stalled %lums: req=%u ctrl=%u enum=%u urb_out=%d urb_in=%d...",
+                                    (unsigned long)elapsed_ms,
+                                    (unsigned int)hUsbHostHS.RequestState,
+                                    (unsigned int)hUsbHostHS.Control.state,
+                                    (unsigned int)hUsbHostHS.EnumState,
+                                    urb_out,
+                                    urb_in);
+        HMI_addSystemMessage(msg);
+  }
 }
 /* USER CODE END 0 */
 

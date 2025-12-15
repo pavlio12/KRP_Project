@@ -11,6 +11,17 @@ public:
     virtual ~Screen1View() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+
+    // USB Role Text
+		virtual void setUsbRoleText(const char* msg);
+
+		// USB State Text
+		virtual void setUsbStateText(const char* msg);
+
+		// USB Device Info TextArea
+		virtual void setDeviceInfo(const char* msg);     // public setter
+		virtual void appendDeviceInfo(const char* msg);
+
 protected:
 };
 

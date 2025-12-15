@@ -16,3 +16,19 @@ void Screen1Presenter::deactivate()
 {
 
 }
+
+void Screen1Presenter::setUsbRoleText(const char* msg) {
+	view.setUsbRoleText(msg);
+}
+
+void Screen1Presenter::setUsbStateText(const char* msg) {
+	view.setUsbStateText(msg);
+}
+
+void Screen1Presenter::setDeviceInfo(const char* msg) {
+	view.setDeviceInfo(msg);
+}
+
+void Screen1Presenter::appendDeviceInfo(const char* msg) {
+	view.appendDeviceInfo(msg);
+}

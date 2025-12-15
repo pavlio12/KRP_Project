@@ -22,6 +22,10 @@ public:
     void setUsbRoleText(const char* msg);
     void setUsbStateText(const char* msg);
 
+    void setScreen1Active(bool active);
+    void setDeviceInfo(const char* msg);
+		void appendDeviceInfo(const char* msg);
+
     void addSystemMessage(const char* msg);
     void addUsbStateGraphPoint(uint8_t stateValue);
 
@@ -46,6 +50,14 @@ protected:
 		char pendingUsbState[16];
     char lastUsbState[16] = {0};
     bool hasLastUsbState = false;
+
+    // Screen1 USB Device Info TextArea
+    bool screen1Active = false;
+    bool hasNewDevInfo = false;
+    static constexpr uint16_t DEVINFO_LOG_SIZE = 1024;
+		char devInfoText[DEVINFO_LOG_SIZE];
+		char lastDevInfo[DEVINFO_LOG_SIZE] = {0};
+		bool hasLastDevInfo = false;
 
     // System Message TextArea (scrollable)
     static constexpr uint8_t SYSMSG_QUEUE_DEPTH = 10;

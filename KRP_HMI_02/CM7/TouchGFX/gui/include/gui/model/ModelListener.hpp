@@ -16,13 +16,13 @@ public:
     }
 
     virtual void setUsbRoleText(const char* /*msg*/) {}
-
     virtual void setUsbStateText(const char* /*msg*/) {}
 
+    virtual void setDeviceInfo(const char* /*msg*/) {}
+		virtual void appendDeviceInfo(const char* /*msg*/) {}
+
     virtual void setSystemMessage(const char* /*msg*/) {}
-
     virtual void appendSystemMessage(const char* /*msg*/) {}
-
     virtual void prependSystemMessage(const char* /*msg*/) {}
 
     virtual void addUsbStateGraphPoint(const uint8_t /*stateValue*/) {}
