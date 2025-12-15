@@ -130,7 +130,7 @@ static void log_connected_device_info(USBH_HandleTypeDef *phost)
              itf->bInterfaceClass, usb_class_to_str(itf->bInterfaceClass),
              itf->bInterfaceSubClass, itf->bInterfaceProtocol);
     HMI_addSystemMessage(msg);
-    // HMI_appendDeviceInfo(msg);
+    HMI_appendDeviceInfo(msg);
   }
 }
 
@@ -276,6 +276,17 @@ static void process_deferred_string_logs(void);
 void MX_USB_HOST_Init(void)
 {
   /* USER CODE BEGIN USB_HOST_Init_PreTreatment */
+  /* Force-reset the OTG HS + ULPI block to mimic a cold power-up */
+  __HAL_RCC_USB_OTG_HS_FORCE_RESET();
+  HAL_Delay(100);
+  __HAL_RCC_USB_OTG_HS_RELEASE_RESET();
+  HAL_Delay(100);
+
+  /* Power-cycle VBUS before starting the host stack */
+  (void)USBH_LL_DriverVBUS(&hUsbHostHS, 0U);
+  USBH_Delay(250);
+  (void)USBH_LL_DriverVBUS(&hUsbHostHS, 1U);
+  USBH_Delay(250);
   /* USER CODE END USB_HOST_Init_PreTreatment */
 
   /* Init host Library, add supported class and start the library. */
@@ -335,6 +346,10 @@ void MX_USB_HOST_Init(void)
 			}
   }
   /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
+  /* After VBUS is stable, enforce a port reset before enumeration */
+  USBH_Delay(100);
+  (void)USBH_LL_ResetPort(&hUsbHostHS);
+  USBH_Delay(100);
   HMI_addSystemMessage("USB Host stack started (HS PHY)");
   /* USER CODE END USB_HOST_Init_PostTreatment */
 }
@@ -498,7 +513,7 @@ static void process_deferred_string_logs(void)
   {
     return;
   }
-  if (hUsbHostHS.RequestState != CMD_SEND)
+  if (hUsbHostHS.RequestState != CMD_SEND) // TODO: Is this correct approach? Investigate please!
   {
     return;
   }
