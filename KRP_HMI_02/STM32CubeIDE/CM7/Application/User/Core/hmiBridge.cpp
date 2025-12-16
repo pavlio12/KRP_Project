@@ -30,7 +30,7 @@ extern "C" void HMI_setDeviceInfo(const char* msg)
     auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
     if (app) {
         app->getModel().setDeviceInfo(msg);
-        app->getModel().addSystemMessage("Screen1 Device info set");
+        // app->getModel().addSystemMessage("Screen1 Device info set");
     }
 }
 
@@ -39,7 +39,7 @@ extern "C" void HMI_appendDeviceInfo(const char* msg)
     auto* app = static_cast<FrontendApplication*>(touchgfx::Application::getInstance());
     if (app) {
         app->getModel().appendDeviceInfo(msg);
-        app->getModel().addSystemMessage("Screen1 Device info appended");
+        // app->getModel().addSystemMessage("Screen1 Device info appended");
     }
 }
 

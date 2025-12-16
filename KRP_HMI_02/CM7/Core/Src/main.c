@@ -252,8 +252,7 @@ Error_Handler();
   // As a diagnostic only, disable D-Cache at startup (CM7):
   // SCB_DisableDCache();
   // SCB_DisableICache(); // optional, DCache is the big one
-
-  HAL_Delay(500);
+  //HAL_Delay(500);
   /* Create the thread(s) */
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);

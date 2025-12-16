@@ -138,21 +138,21 @@ static const char* usb_host_state_to_str(HOST_StateTypeDef state)
 {
   switch (state)
   {
-    case HOST_IDLE:                    return "HOST_IDLE";
-    case HOST_DEV_WAIT_FOR_ATTACHMENT: return "HOST_DEV_WAIT_FOR_ATTACHMENT";
-    case HOST_DEV_ATTACHED:            return "HOST_DEV_ATTACHED";
-    case HOST_DEV_DISCONNECTED:        return "HOST_DEV_DISCONNECTED";
-    case HOST_DETECT_DEVICE_SPEED:     return "HOST_DETECT_DEVICE_SPEED";
-    case HOST_ENUMERATION:             return "HOST_ENUMERATION";
-    case HOST_CLASS_REQUEST:           return "HOST_CLASS_REQUEST";
-    case HOST_INPUT:                   return "HOST_INPUT";
-    case HOST_SET_CONFIGURATION:       return "HOST_SET_CONFIGURATION";
-    case HOST_SET_WAKEUP_FEATURE:      return "HOST_SET_WAKEUP_FEATURE";
-    case HOST_CHECK_CLASS:             return "HOST_CHECK_CLASS";
-    case HOST_CLASS:                   return "HOST_CLASS";
-    case HOST_SUSPENDED:               return "HOST_SUSPENDED";
-    case HOST_ABORT_STATE:             return "HOST_ABORT_STATE";
-    default:                           return "HOST_STATE_UNKNOWN";
+    case HOST_IDLE:                    return "idle";
+    case HOST_DEV_WAIT_FOR_ATTACHMENT: return "dev_wait_for_attachment";
+    case HOST_DEV_ATTACHED:            return "dev_attached";
+    case HOST_DEV_DISCONNECTED:        return "dev_disconnected";
+    case HOST_DETECT_DEVICE_SPEED:     return "detect_device_speed";
+    case HOST_ENUMERATION:             return "enumeration";
+    case HOST_CLASS_REQUEST:           return "class_request";
+    case HOST_INPUT:                   return "input";
+    case HOST_SET_CONFIGURATION:       return "set_configuration";
+    case HOST_SET_WAKEUP_FEATURE:      return "set_wakeup_feature";
+    case HOST_CHECK_CLASS:             return "check_class";
+    case HOST_CLASS:                   return "class";
+    case HOST_SUSPENDED:               return "suspended";
+    case HOST_ABORT_STATE:             return "abort_state";
+    default:                           return "state_unknown";
   }
 }
 

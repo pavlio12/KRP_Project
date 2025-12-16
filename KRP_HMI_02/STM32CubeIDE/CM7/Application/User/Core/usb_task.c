@@ -72,7 +72,7 @@ void USB_Device_Task(void *argument)
 		HMI_setUsbStateText(USB_GetStateString());
 		HMI_addUsbStateGraphPoint(USB_GetStateID()); // Show initial USB state
 
-		osDelay(500);
+		//osDelay(500);
 		for (;;) {
 				if (g_usb_role == DRD_MODE_DEVICE) {
 						usb_do_actions();       // Do current-state actions
