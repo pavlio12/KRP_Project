@@ -1,28 +1,40 @@
 # Dual‑Role USB Host/Device with TouchGFX HMI  
-**Course:** Komunikační rozhraní počítačů (CTU FEE)  
+**Course:** Komunikační Rozhraní Počítačů (CTU FEE)  
 **Author:** Ondřej Pavlín, KyR (Cybernetics & Robotics), CTU FEE, Prague  
 **Platform:** STM32H747I‑DISCO (CM7) with TouchGFX  
-**Date:** 2025
+**Date:** Winter 2025
 
 ---
 
 ## 1. Purpose and Scope
-This report documents the design, integration, and stabilization of a dual‑role USB solution (Device + Host) with a TouchGFX user interface on the STM32H747I‑DISCO. It highlights architectural choices, toolchain constraints, and corrective actions taken to achieve reliable enumeration and data display for a university‑level project on USB protocols.
+This report documents the design and implementation of a dual‑role USB solution (Device + Host) with a TouchGFX user interface on the STM32H747I‑DISCO. It highlights architectural choices, toolchain constraints, and corrective actions taken to achieve reliable role-switching, enumeration and data display.
 
 ## 2. Development Process and Toolchain
-- **Base project:** Generated with TouchGFX Designer (UI scaffolding: Screen1/Screen2).  
+- **Base project:** Generated with TouchGFX Designer (UI scaffolding: Screen1/Screen2/Screen3).  
 - **CubeMX/STM32CubeIDE:** Initially used to enable USB **Device** via `.ioc` and generate code.  
-- **Manual Host integration:** USB **Host** stack was copied in (Core, Class, Target/App) and hand‑wired. This required:
+- **Manual Host integration:** A separate minimal USB **Host** project was generated via `.ioc`and used as a reference for hand-wiring into this dual-role project. stack was copied in (Core, Class, Target/App) and hand‑wired. This required:
+  - Manually copying selected folders such as:
+  ```
+  /CM7/USB_HOST/App
+  /CM7/USB_HOST/Target
+  /Middlewares/ST/STM32_USB_Host_Library/Core/Inc
+  /Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc
+  /Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc
+  ```
   - Adding Host include/source paths to MCU GCC/G++ compilers.
   - Adding linked resources so STM32CubeIDE sees imported folders.
   - Reconciling HAL/LL init, interrupts, and BSP glue.
-- **Important constraint:** Re‑generating code from `.ioc` now breaks the project (hundreds of errors) because CubeMX overwrites manual Host additions and include paths. TouchGFX Designer remains usable. Any CubeMX changes must be generated in a throwaway project and ported selectively.
+- **Important constraint:** Re‑generating code from `.ioc` now breaks the project (hundreds of errors) because CubeMX overwrites manual Host additions and include paths. TouchGFX Designer remains usable and the HMI can be modified and re-generated. Any CubeMX changes must be generated in a throwaway project and ported manually selectively.
+
+- A similar Dual-Role USB project (with a different STM board) is explain in the following **ST article**: https://community.st.com/t5/stm32-mcus/how-to-configure-stm32-as-usb-dual-role/ta-p/805806#toc-hId-1305948
 
 ## 3. High‑Level Architecture
 ### Application/UI (TouchGFX)
 - **Model/Presenter/View:**  
-  - Screen1: USB role/state + device info (TextArea).  
-  - Screen2: System messages + USB state graph.  
+  - All screens show the USB role and USB state on the right side.
+  - Screen1: Connected device info.  
+  - Screen2: Detailed System messages.
+  - Screen3: USB state graph showing the USB state history.
   - `hmiBridge` C wrappers expose model setters to firmware (role/state, system messages, device info).
 
 ### USB Subsystem
